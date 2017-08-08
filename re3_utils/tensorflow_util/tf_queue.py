@@ -3,6 +3,8 @@ import threading
 import numpy as np
 import time
 
+DEBUG = True
+
 class TFQueue(object):
 
     def __init__(self, sess, placeholders, max_queue_size, max_queue_uses, use_random_order, batch_size):
@@ -16,6 +18,7 @@ class TFQueue(object):
         self.batch_size = batch_size
         self.enqueue_batch_size = self.placeholders[0].get_shape().as_list()[0]
         self.use_random_order = use_random_order
+        self.num_samples = 0
 
         # Set up queue and operations
         with tf.device('/cpu:0'):
@@ -69,6 +72,20 @@ class TFQueue(object):
                 feed_dict[placeholder].append(data[placeholder])
 
         feed_dict = {key : np.ascontiguousarray(val) for (key, val) in feed_dict.items()}
+        self.num_samples += 1
+        if DEBUG and self.num_samples % 10 == 0:
+            if len(self.data_buffer) < self.max_queue_size:
+                print('Buffer size: %d  Num unused: %d  Max times used: %d Median times used: %d\n' % (
+                        len(self.data_buffer),
+                        (len(self.data_buffer) - len(self.data_counts[self.data_counts > 0])),
+                        np.max(self.data_counts),
+                        np.median(self.data_counts)))
+            else:
+                print('Buffer Full. Num unused: %d  Max times used: %d  Median times used: %d\n' % (
+                        (len(self.data_buffer) - len(self.data_counts[self.data_counts > 0])),
+                        np.max(self.data_counts),
+                        np.median(self.data_counts)))
+
 
         self.lock.release()
         return feed_dict
