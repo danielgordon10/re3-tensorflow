@@ -15,7 +15,7 @@ For debugging, it is often useful to see the network's output on the input image
 To change GPU, use `-v GPU_ID`. For increased speed, you can set 2 GPU_IDs and the self-training network will run on a separate GPU but will share parameters with the main network.
 When training with 16/32 unrolls, it is probably a good idea to run the val process as well. This runs the current tracker against a validation set using the test_net.py script. To do this, add the `--run_val` flag. A common command towards the end of training would be
 ```
-python unrolled_solver.py -rtc -n 32 -b 8 -p 2233 -v 0,1 --run_val --val_device=2
+python unrolled_solver.py -rtc -n 32 -b 8 -p 2233 -v 0,1 --run_val --val_device 2
 ```
 
 ## Unrolls
