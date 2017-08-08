@@ -1,7 +1,6 @@
 import cv2
 import glob
 import numpy as np
-import scipy.misc
 import sys
 import os.path
 
@@ -24,10 +23,12 @@ initial_bbox = [190, 158, 249, 215]
 tracker.track('ball', image_paths[0], initial_bbox)
 print 'ball track started'
 for ii,image_path in enumerate(image_paths):
-    image = scipy.misc.imread(image_path)
+    image = cv2.imread(image_path)
+    # Tracker expects RGB, but opencv loads BGR.
+    imageRGB = image[:,:,::-1]
     if ii < 100:
         # The track alread exists, so all that is needed is the unique id and the image.
-        bbox = tracker.track('ball', image)
+        bbox = tracker.track('ball', imageRGB)
         color = cv2.cvtColor(np.uint8([[[0, 128, 200]]]),
             cv2.COLOR_HSV2RGB).squeeze().tolist()
         cv2.rectangle(image,
@@ -36,11 +37,11 @@ for ii,image_path in enumerate(image_paths):
                 color, 2)
     elif ii == 100:
         # Start a new track, but continue the first as well. Only the new track needs an initial bounding box.
-        bboxes = tracker.multi_track(['ball', 'logo'], image, {'logo' : [399, 20, 428, 45]})
+        bboxes = tracker.multi_track(['ball', 'logo'], imageRGB, {'logo' : [399, 20, 428, 45]})
         print 'logo track started'
     else:
         # Both tracks are started, neither needs bounding boxes.
-        bboxes = tracker.multi_track(['ball', 'logo'], image)
+        bboxes = tracker.multi_track(['ball', 'logo'], imageRGB)
     if ii >= 100:
         for bb,bbox in enumerate(bboxes):
             color = cv2.cvtColor(np.uint8([[[bb * 255 / len(bboxes), 128, 200]]]),
@@ -49,5 +50,5 @@ for ii,image_path in enumerate(image_paths):
                     (int(bbox[0]), int(bbox[1])),
                     (int(bbox[2]), int(bbox[3])),
                     color, 2)
-    cv2.imshow('Image', image[:,:,[2,1,0]])
+    cv2.imshow('Image', image)
     cv2.waitKey(1)

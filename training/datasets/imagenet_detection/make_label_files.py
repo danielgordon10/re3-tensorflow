@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import scipy.misc
 import glob
 import xml.etree.ElementTree as ET
 import os
@@ -46,8 +45,8 @@ def main(label_type):
         area_cutoff = imgSize[0] * imgSize[1] * 0.01
         if DEBUG:
             print '\nimage name\n\n%s\n' % images[imOn]
-            image = scipy.misc.imread(images[imOn])
-            print 'scipy image size', image.shape
+            image = cv2.imread(images[imOn])
+            print 'image size', image.shape
             print label
             print labelTree
             print labelTree.findall('object')
@@ -66,13 +65,13 @@ def main(label_type):
                 image = image.squeeze()
                 if len(image.shape) < 3:
                     image = np.tile(image[:,:,np.newaxis], (1,1,3))
-                drawing.drawRect(image, bbox[:-1], 3, [255, 0, 0])
+                drawing.drawRect(image, bbox[:-1], 3, [0, 0, 255])
             bboxes.append(bbox)
 
         if DEBUG:
             if len(image.shape) == 2:
                 image = np.tile(image[:,:,np.newaxis], (1,1,3))
-            cv2.imshow('image', image[:,:,[2,1,0]])
+            cv2.imshow('image', image)
             cv2.waitKey(0)
 
     bboxes = np.array(bboxes)

@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import scipy.misc
 import glob
 import xml.etree.ElementTree as ET
 import time
@@ -86,7 +85,7 @@ def main(label_type):
             area = imgSize[0] * imgSize[1]
             if DEBUG:
                 print '\n%s' % images[ii]
-                image = scipy.misc.imread(images[ii])
+                image = cv2.imread(images[ii])
                 print 'video', vv, 'image', ii
             for obj in labelTree.findall('object'):
                 cls = obj.find('name').text
@@ -110,7 +109,7 @@ def main(label_type):
                     drawing.drawRect(image, bbox[:4], 3, trackColor[trackId])
                 bboxes.append(bbox)
             if DEBUG:
-                cv2.imshow('image', image[:,:,[2,1,0]])
+                cv2.imshow('image', image)
                 cv2.waitKey(1)
 
             imNum += 1

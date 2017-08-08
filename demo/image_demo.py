@@ -1,7 +1,6 @@
 import cv2
 import glob
 import numpy as np
-import scipy.misc
 import sys
 import os.path
 
@@ -22,11 +21,13 @@ image_paths = sorted(glob.glob(os.path.join(
 initial_bbox = [175, 154, 251, 229]
 tracker.track('ball', image_paths[0], initial_bbox)
 for image_path in image_paths:
-    image = scipy.misc.imread(image_path)
-    bbox = tracker.track('ball', image)
+    image = cv2.imread(image_path)
+    # Tracker expects RGB, but opencv loads BGR.
+    imageRGB = image[:,:,::-1]
+    bbox = tracker.track('ball', imageRGB)
     cv2.rectangle(image,
             (int(bbox[0]), int(bbox[1])),
             (int(bbox[2]), int(bbox[3])),
-            [255,0,0], 2)
-    cv2.imshow('Image', image[:,:,[2,1,0]])
+            [0,0,255], 2)
+    cv2.imshow('Image', image)
     cv2.waitKey(1)

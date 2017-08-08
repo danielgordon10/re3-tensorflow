@@ -2,7 +2,6 @@ import argparse
 import cv2
 import numpy as np
 import os
-import scipy.misc
 import time
 import json
 
@@ -64,9 +63,10 @@ def runFrame(imOn, gtOn):
     gtBox = gt[gtOn, :4].copy()
 
     if DISPLAY:
-        inputImage = scipy.misc.imread(imageNames[imOn])
-        imageToDraw = inputImage.copy()
-        drawRect(imageToDraw, gtBox, PADDING * 2, [255,0,0])
+        inputImageBGR = cv2.imread(imageNames[imOn])
+        inputImage = inputImageBGR[:,:,::-1]
+        imageToDraw = inputImageBGR.copy()
+        drawRect(imageToDraw, gtBox, PADDING * 2, [0, 255, 0])
     else:
         inputImage = imageNames[imOn]
 
@@ -81,7 +81,7 @@ def runFrame(imOn, gtOn):
             outputBox = tracker.track('test_track', inputImage)
 
         if DISPLAY:
-            drawRect(imageToDraw, outputBox, PADDING, [0,0,255])
+            drawRect(imageToDraw, outputBox, PADDING, [0, 0, 255])
 
         if initializeFrames == 0:
             iou = IOU(outputBox, gtBox)
@@ -186,7 +186,7 @@ if __name__ == '__main__':
             im = subplot(plots, NUM_ROWS, NUM_COLS, titles=titles,
                     outputWidth=OUTPUT_WIDTH, outputHeight=OUTPUT_HEIGHT,
                     border=BORDER, fancy_text=FLAGS.fancy_text)
-            cv2.imshow('Output', im[:,:,[2,1,0]])
+            cv2.imshow('Output', im)
             waitKey = cv2.waitKey(1)
             if FLAGS.record:
                 if imOn % 100 == 0:

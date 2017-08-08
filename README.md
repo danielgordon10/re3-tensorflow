@@ -6,10 +6,9 @@ Re3 is a real-time recurrent regression tracker. It offers accuracy and robustne
 1. Python 2 (don't get me started on Python3 not being backwards compatible).
 2. [Tensorflow](https://www.tensorflow.org/) and its requirements. I use the pip tensorflow-gpu==1.2.0
 3. [NumPy](http://www.numpy.org/). The pip should work.
-4. [SciPy](https://www.scipy.org/). The pip should work.
-5. [OpenCV 2](http://opencv.org/opencv-2-4-8.html). The opencv-python pip should work.
-6. [CUDA (Strongly Recommended)](https://developer.nvidia.com/cuda-downloads).
-7. [cuDNN (Recommended)](https://developer.nvidia.com/cudnn).
+4. [OpenCV 2](http://opencv.org/opencv-2-4-8.html). The opencv-python pip should work.
+5. [CUDA (Strongly Recommended)](https://developer.nvidia.com/cuda-downloads).
+6. [cuDNN (Recommended)](https://developer.nvidia.com/cudnn).
 
 ## Model:
 The model weights we used in our paper were ported from Caffe to Tensorflow. Because they deal with padding differently, results are slightly different, but the model still works well.

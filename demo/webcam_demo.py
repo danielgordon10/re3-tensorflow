@@ -3,7 +3,6 @@ import argparse
 import glob
 import numpy as np
 import os
-import scipy
 import time
 import sys
 
@@ -18,8 +17,6 @@ from re3_utils.util import im_util
 from constants import OUTPUT_WIDTH
 from constants import OUTPUT_HEIGHT
 from constants import PADDING
-
-RECORD = False
 
 np.set_printoptions(precision=6)
 np.set_printoptions(suppress=True)
@@ -60,6 +57,7 @@ def show_webcam(mirror=False):
     outputDir = None
     outputBoxToDraw = None
     if RECORD:
+        print 'saving'
         if not os.path.exists('outputs'):
             os.mkdir('outputs')
         tt = time.localtime()
@@ -81,10 +79,10 @@ def show_webcam(mirror=False):
                 cv2.circle(img, (int(drawnBox[2]), int(drawnBox[3])), 10, [255,0,0], 4)
         elif mouseupdown:
             if initialize:
-                outputBoxToDraw = tracker.track('webcam', img[:,:,[2,1,0]], boxToDraw)
+                outputBoxToDraw = tracker.track('webcam', img[:,:,::-1], boxToDraw)
                 initialize = False
             else:
-                outputBoxToDraw = tracker.track('webcam', img[:,:,[2,1,0]])
+                outputBoxToDraw = tracker.track('webcam', img[:,:,::-1])
             cv2.rectangle(img,
                     (int(outputBoxToDraw[0]), int(outputBoxToDraw[1])),
                     (int(outputBoxToDraw[2]), int(outputBoxToDraw[3])),
@@ -95,7 +93,8 @@ def show_webcam(mirror=False):
                 labels.write('%d %.2f %.2f %.2f %.2f\n' %
                         (frameNum, outputBoxToDraw[0], outputBoxToDraw[1],
                             outputBoxToDraw[2], outputBoxToDraw[3]))
-            scipy.misc.imsave('%s%08d.jpg' % (outputDir, frameNum), origImg[:,:,[2,1,0]])
+            cv2.imwrite('%s%08d.jpg' % (outputDir, frameNum), origImg)
+            print 'saving'
         keyPressed = cv2.waitKey(1)
         if keyPressed == 27 or keyPressed == 1048603:
             break  # esc to quit

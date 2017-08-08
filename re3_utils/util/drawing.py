@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import scipy.misc
 
 BORDER = 0
 CV_FONT = cv2.FONT_HERSHEY_DUPLEX

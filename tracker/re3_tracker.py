@@ -2,7 +2,6 @@ import cv2
 import glob
 import numpy as np
 import os
-import scipy
 import tensorflow as tf
 import time
 
@@ -28,7 +27,7 @@ from constants import MAX_TRACK_LENGTH
 
 os.environ['CUDA_VISIBLE_DEVICES'] = str(GPU_ID)
 
-SPEED_OUTPUT = False
+SPEED_OUTPUT = True
 
 class Re3Tracker(object):
     def __init__(self, gpu_id=None):
@@ -61,7 +60,7 @@ class Re3Tracker(object):
         start_time = time.time()
 
         if type(image) == str:
-            image = scipy.misc.imread(image)
+            image = cv2.imread(image)[:,:,::-1]
         else:
             image = image.copy()
 
@@ -140,7 +139,7 @@ class Re3Tracker(object):
         assert len(unique_ids) > 1, 'unique_ids must be at least 2 elements'
 
         if type(image) == str:
-            image = scipy.misc.imread(image)
+            image = cv2.imread(image)[:,:,::-1]
         else:
             image = image.copy()
 

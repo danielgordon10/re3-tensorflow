@@ -1,4 +1,3 @@
 numpy
-scipy
 opencv-python
 tensorflow-gpu==1.2.0

@@ -1,9 +1,9 @@
 import argparse
+import cv2
 import cPickle
 import glob
 import numpy as np
 import random
-import scipy.misc
 import SocketServer
 import struct
 import sys
@@ -178,7 +178,7 @@ class BatchCacheServer:
                 print 'Reading image', imageName
             for dd in xrange(self.num_unrolls):
                 path = self.image_paths[key[0]][ind + dd]
-                image = scipy.misc.imread(path)
+                image = cv2.imread(path)[:,:,::-1]
                 shape = cPickle.dumps(image.shape)
                 string = image.tostring()
                 images.append((string, shape))

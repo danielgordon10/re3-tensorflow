@@ -5,7 +5,6 @@ import glob
 import numpy as np
 import os
 import random
-import scipy
 import socket
 import struct
 import sys
@@ -407,7 +406,7 @@ def main(_):
                 label[0,1] = 0
                 plots = [bigImage0, bigImage1, image0, image1, label]
                 subplot = drawing.subplot(plots, 3, 2, outputWidth=OUTPUT_WIDTH, outputHeight=OUTPUT_HEIGHT, border=5)
-                cv2.imshow('debug', subplot[:,:,[2,1,0]])
+                cv2.imshow('debug', subplot[:,:,::-1])
                 cv2.waitKey(100)
 
         if mirroredInds:
@@ -572,7 +571,7 @@ def main(_):
 
                         plots = [image0, image1, None, outputImage]
                         subplot = drawing.subplot(plots, 2, 2, outputWidth=OUTPUT_WIDTH, outputHeight=OUTPUT_HEIGHT, border=5)
-                        cv2.imshow('debug', subplot[:,:,[2,1,0]])
+                        cv2.imshow('debug', subplot[:,:,::-1])
                         cv2.waitKey(100)
                 queue.lock.release()
     except KeyboardInterrupt:

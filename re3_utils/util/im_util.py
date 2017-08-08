@@ -1,29 +1,5 @@
 import cv2
 import numpy as np
-import scipy
-
-# @image{ndarray} image to be resized
-# @size{tuple} new size for each dimension of the array.
-#    if len(size) < image dimensions, rest will be filled with current size.
-# @interp{'nearest', 'bilinear', 'bicubic'} the interpolation type to use.
-def imresize(image, size, interp='bilinear'):
-    if interp == 'nearest':
-        order = 0
-    elif interp == 'bilinear':
-        order = 1
-    elif interp == 'bicubic':
-        order = 3
-
-    if len(size) < len(image.shape):
-        newSize = np.array(image.shape)
-        newSize[:len(size)] = size
-        size = newSize
-    # Make sure output has the right size or get warning.
-    output = np.zeros(size, dtype=image.dtype)
-    zoom = size.astype(np.float32) / image.shape
-    scipy.ndimage.zoom(image, zoom, output, order)
-    return output
-
 
 # @inputImage{ndarray HxWx3} Full input image.
 # @bbox{ndarray or list 4x1} bbox to be cropped in x1,y1,x2,y2 format.
@@ -131,6 +107,5 @@ def get_image_size(fname):
             else:
                 break
             return width, height
-    import scipy.misc
-    imShape = scipy.misc.imread(fname).shape
+    imShape = cv2.imread(fname).shape
     return imShape[1], imShape[0]

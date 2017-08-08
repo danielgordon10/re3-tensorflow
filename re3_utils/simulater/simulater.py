@@ -2,7 +2,6 @@ import cv2
 import glob
 import numpy as np
 import random
-import scipy.misc
 import time
 
 import TrackedObject
@@ -79,7 +78,7 @@ def make_paths(train=True):
 def get_random_image():
     randInd = random.randint(0, BOXES.shape[0] - 1)
     nameInd = BOXES[randInd, 4]
-    image = scipy.misc.imread(IMAGE_NAMES[nameInd])
+    image = cv2.imread(IMAGE_NAMES[nameInd])[:,:,::-1]
     if len(image.shape) < 3:
         image = np.tile(image[:,:,np.newaxis], (1,1,3))
     if image.shape[2] > 3:
@@ -345,7 +344,7 @@ def get_image_sequence(seqLen, imCount=0, writeFull=False):
 
         if writeFull:
             newImage = get_image_for_frame(trackedObjects, background)
-            scipy.misc.imsave('images_full/%07d.png' % seqInd, newImage)
+            cv2.imwrite('images_full/%07d.png' % seqInd, newImage[:,:,::-1])
             seqInd += 1
         trackedObjects = step(trackedObjects)
     return sequence
@@ -371,6 +370,6 @@ if __name__ == '__main__':
         for (image, bbox) in sequence:
             imCount += 1
             drawing.drawRect(image, bbox, 1, [255,0,0])
-            scipy.misc.imsave('images/%07d.png' % imCount, image)
+            cv2.imwrite('images/%07d.png' % imCount, image[:,:,::-1])
         print 'average time per frame %.5f' % np.mean(times)
 
