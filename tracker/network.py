@@ -88,7 +88,6 @@ def alexnet_conv_layers(input, batch_size, num_unrolls):
         # BxTxHxWxC
         pool5_concat = tf.concat(pool5_split, 3)
         # BxTxHxWxC
-        #reshaped = tf.reshape(pool5_concat, tf.stack([batch_size * num_unrolls, -1]))
         reshaped = tf_util.remove_axis(pool5_concat, 1)
 
     return reshaped
@@ -178,7 +177,6 @@ def training(loss, learning_rate):
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
     with tf.device('/cpu:0'):
         global_step = tf.train.create_global_step()
-    #train_op = tf.contrib.training.create_train_op(loss, optimizer)
     train_op = optimizer.minimize(loss, var_list=get_var_list(), global_step=global_step,
         colocate_gradients_with_ops=True)
     return train_op

@@ -1,4 +1,4 @@
-import re3_tracker.py
+import re3_tracker
 import vot
 
 print 'before first frame'

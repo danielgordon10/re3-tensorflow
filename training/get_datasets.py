@@ -2,10 +2,6 @@ import numpy as np
 import glob
 import os
 
-import sys
-sys.path.append(os.path.abspath(os.path.join(
-    os.path.dirname(__file__), os.path.pardir)))
-
 def get_data_for_dataset(dataset_name, mode):
     # Implement this for each dataset.
     if dataset_name == 'imagenet_video':

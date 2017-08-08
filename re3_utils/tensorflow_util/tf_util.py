@@ -189,14 +189,6 @@ def remove_axis_get_shape(curr_shape, axis):
     assert axis > 0, 'Axis must be greater than 0'
     axis_shape = curr_shape.pop(axis)
     curr_shape[axis - 1] *= axis_shape
-    '''
-    if curr_shape[axis - 1] == None:
-        pass
-    elif axis_shape is None:
-        curr_shape[axis - 1] = None
-    else:
-        curr_shape[axis - 1] *= axis_shape
-    '''
     return curr_shape
 
 def remove_axis(input, axis):

@@ -31,13 +31,14 @@ from re3_utils.util import drawing
 from re3_utils.util import IOU
 from re3_utils.simulater import simulater
 
-from constants import CROP_SIZE
-from constants import OUTPUT_SIZE
-from constants import LSTM_SIZE
 from constants import CROP_PAD
+from constants import CROP_SIZE
+from constants import LSTM_SIZE
+from constants import GPU_ID
 from constants import LOG_DIR
 from constants import OUTPUT_WIDTH
 from constants import OUTPUT_HEIGHT
+from constants import OUTPUT_SIZE
 
 HOST = 'localhost'
 NUM_ITERATIONS = int(1e6)
@@ -584,7 +585,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Training for Re3.')
     parser.add_argument('-n', '--num_unrolls', action='store', default=2, dest='delta', type=int)
     parser.add_argument('-b', '--batch_size', action='store', default=64, type=int)
-    parser.add_argument('-v', '--cuda_visible_devices', type=str, default='0', help='Device number or string')
+    parser.add_argument('-v', '--cuda_visible_devices', type=str, default=str(GPU_ID), help='Device number or string')
     parser.add_argument('-r', '--restore', action='store_true', default=False)
     parser.add_argument('-d', '--debug', action='store_true', default=False)
     parser.add_argument('-t', '--timing', action='store_true', default=False)

@@ -5,7 +5,6 @@ LIMIT = 99999999
 
 # BBoxes are [x1, y1, x2, y2]
 def clip_bbox(bboxes, minClip, maxXClip, maxYClip):
-    #bboxesOut = np.array(bboxes)
     bboxesOut = bboxes
     addedAxis = False
     if len(bboxesOut.shape) == 1:

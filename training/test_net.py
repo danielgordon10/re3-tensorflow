@@ -5,10 +5,10 @@ import os
 import scipy.misc
 import time
 import json
-import sys
 
-basedir = os.path.dirname(__file__)
-sys.path.append(os.path.abspath(os.path.join(basedir, os.path.pardir)))
+import sys
+sys.path.append(os.path.abspath(os.path.join(
+    os.path.dirname(__file__), os.path.pardir)))
 
 from re3_utils.util import bb_util
 from re3_utils.util import im_util
@@ -27,6 +27,8 @@ from constants import OUTPUT_SIZE
 from constants import OUTPUT_WIDTH
 from constants import OUTPUT_HEIGHT
 from constants import PADDING
+from constants import GPU_ID
+
 NUM_COLS = 1
 NUM_ROWS = 1
 BORDER = 0
@@ -126,15 +128,15 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug', action='store_true', default=False)
     parser.add_argument('-r', '--record', action='store_true', default=False)
     parser.add_argument('-f', '--fancy_text', action='store_true', default=False,
-            help='Use a fancier font than OpenCVs, but takes longer to render an image.
-            This should be used for making higher-quality videos.')
+            help='Use a fancier font than OpenCVs, but takes longer to render an image.'
+                 'This should be used for making higher-quality videos.')
     parser.add_argument('-n', '--max_images', action='store', default=-1, dest='maxCount', type=int)
     parser.add_argument('-s', '--num_images_to_skip', action='store', default=0, dest='skipCount', type=int)
     parser.add_argument('-m', '--mode', action='store', default='val', type=str, help='train or val')
     parser.add_argument('--dataset', default='imagenet_video', type=str, help='name of the dataset')
     parser.add_argument('--video_sample_rate', default=1, type=int,
             help='One of every n videos will be run. Useful for testing portions of larger datasets.')
-    parser.add_argument('-v', '--cuda_visible_devices', type=str, default='0', help='Device number or string')
+    parser.add_argument('-v', '--cuda_visible_devices', type=str, default=str(GPU_ID), help='Device number or string')
     feature_parser = parser.add_mutually_exclusive_group(required=False)
     feature_parser.add_argument('--display', dest='display', action='store_true')
     feature_parser.add_argument('--no-display', dest='display', action='store_false')

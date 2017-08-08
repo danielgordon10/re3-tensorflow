@@ -1,5 +1,3 @@
-EXTERNAL = False
-
 # Network Constants
 CROP_SIZE = 227
 OUTPUT_SIZE = 16
@@ -9,7 +7,7 @@ LSTM_SIZE = 1024
 
 import os.path
 LOG_DIR = os.path.join(os.path.dirname(__file__), 'logs')
-GPU_ID = 0
+GPU_ID = '0'
 
 # Drawing constants
 OUTPUT_WIDTH = 640

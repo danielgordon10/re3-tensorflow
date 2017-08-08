@@ -32,7 +32,7 @@ with sess.as_default():
     sess.run(init)
 
     import caffe
-    caffe.set_mode_gpu()
+    caffe.set_mode_cpu()
     # Load caffe net
     net_snapshot = sorted(glob.glob('*.caffemodel'), key=os.path.getmtime)[-1]
     reference_net = caffe.Net('RNNNet_deploy.prototxt', net_snapshot, 0)
