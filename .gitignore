@@ -1,0 +1,8 @@
+*.caffemodel
+*.jpg
+*~
+*.swp
+*.pyc
+logs/
+demo/data/
+labels/

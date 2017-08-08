@@ -1,0 +1,72 @@
+# Re3
+
+Re3 is a real-time recurrent regression tracker. It offers accuracy and robustness similar to other state-of-the-art trackers while operating at 150 FPS. For more details, contact xkcd@cs.washington.edu. This repository implements the training and testing procedure from https://arxiv.org/pdf/1705.06368.pdf. A sample of the tracker can be found here: https://www.youtube.com/watch?v=PC0txGaYz2I.
+
+## Requirements:
+1. Python 2 (don't get me started on Python3 not being backwards compatible).
+2. [Tensorflow](https://www.tensorflow.org/) and its requirements. I use the pip tensorflow-gpu==1.2.0
+3. [NumPy](http://www.numpy.org/). The pip should work.
+4. [SciPy](https://www.scipy.org/). The pip should work.
+5. [OpenCV 2](http://opencv.org/opencv-2-4-8.html). The opencv-python pip should work.
+6. [CUDA (Strongly Recommended)](https://developer.nvidia.com/cuda-downloads).
+7. [cuDNN (Recommended)](https://developer.nvidia.com/cudnn).
+
+## Model:
+The model weights we used in our paper were ported from Caffe to Tensorflow. Because they deal with padding differently, results are slightly different, but the model still works well.
+To use it, download it [here](https://goo.gl/NWGXGM), extract the tar, and place in your log directory (mine is "logs").
+
+## Folders and Files:
+### Most important for using Re3 in a new project:
+1. [tracker.py](tracker/re3_tracker.py)
+2. [network.py](tracker/network.py)
+3. [The provided model weights file.](https://goo.gl/NWGXGM)
+
+### Most important for (re)training Re3 on new data:
+1. [unrolled_solver.py](training/unrolled_solver.py)
+2. [batch_cache.py](training/batch_cache.py)
+
+### Most useful not related to Re3:
+1. [tf_util.py](re3_utils/tensorflow_util/tf_util.py)
+2. [tf_queue.py](re3_utils/tensorflow_util/tf_queue.py)
+3. [drawing.py](re3_utils/util/drawing.py)
+
+### More details than you wanted:
+1. demo:
+    * [data_demo.py](demo/data_demo.py) - A premade demo to show Re3 tracking an object.
+    * [webcam_demo.py](demo/webcam_demo.py) - A demo that uses a webcam feed to track an object. Simply click and drag the mouse around the object to track. When you release the mouse, tracking will begin. To track a new object, simply draw a new box.
+2. re3_utils:
+    * simulater - The code that defines the simulation of object tracks.
+    * tensorflow_util:
+        * [CaffeLSTMCell.py](re3_utils/tensorflow_util/CaffeLSTMCell.py) - The custom cell ported from Caffe defining Re3's LSTM unit.
+        * [tf_queue.py](re3_utils/tensorflow_util/tf_queue.py) - A nice wrapper for threaded data loading in Tensorflow. Feel free to use separately from Re3 as well.
+        * [tf_util.py](re3_utils/tensorflow_util/tf_util.py) - A bunch of functions that should probably be built into Tensorflow, but mostly aren't. This includes things like grouped convolutions, automatic variable summarization, PReLU non-linearity, and a restore function that doesn't suck (modeled after Caffe's restore). Again, feel free to use this even if you don't use Re3.
+    * util:
+        * [bb_util.py](re3_utils/util/bb_util.py) - A few useful functions for bounding boxes in Numpy
+        * [drawing.py](re3_utils/util/drawing.py) - A few custom drawing functions mainly used for showing outputs in one image.
+        * [im_util.py](re3_utils/util/im_util.py) - A few functions for resizing images. get_cropped_input is used in many locations in the code as the function that crops, warps, and resizes images to be fed into the network. It is quite fast and robust.
+        * [IOU.py](re3_utils/util/IOU.py) - A few functions for computing IOUs on Numpy arrays.
+3. tracker:
+    * [network.py](tracker/network.py) - The Re3 network definition in Tensorflow. This includes training and testing networks and operations.
+    * [re3_tracker.py](tracker/re3_tracker.py) - A (roughly) stand-alone wrapper for the Re3 tracker for use at inference time. It can keep track of multiple tracks at once. Look in the demo folder for how to use it. It wraps all the Tensorflow ugliness, returning a nice, simple bounding box for every provided image. You should not instantiate a new tracker for each new object. Instead, use the unique_id given to track.
+    * [re3_vot_tracker.py](tracker/re3_vot_tracker.py) - A simple interface to the VOT evaluation code that uses the re3_tracker.
+4. training:
+    * [batch_cache.py](training/batch_cache.py) - A local data server useful for reading in images from disc onto RAM. The images will be sent over a pipe to the training process.
+    * [caffe_to_tf.py](training/caffe_to_tf.py)  - The script used to port Caffe weights to Tensorflow.
+    * [read_gt.py](training/read_gt.py)  - Reads in data stored in a variety of different formats into a common(ish) format between all datasets.
+    * [test_net.py](training/test_net.py)  - Runs through a provided sequence of images, tracking and computing IOUs on all ground truth frames. It can also make videos of the results.
+    * [unrolled_solver.py](training/unrolled_solver.py)  - The big, bad training file. This unwieldy piece of code encapsulates much of the complexity involved in training Re3 in terms of data management, image preprocessing, and parallelization. It also contains lots of code for logging and debugging that I found immensely useful. Look through the command-line arguments and constants declared at the top for more knobs to tune during training. If you kill a training run with Ctrl-c, it will save the current weights (which I also found very useful) before it extits.
+5. [constants.py](constants.py) - A place to put constants that are used in multiple files such as image size and log location.
+
+## License and Citation
+
+Re3 is released under the GPL V3.
+
+Please cite Re3 in your publications if it helps your research:
+```
+@article{gordon2017re3,
+  title={Re3: Real-Time Recurrent Regression Networks for Object Tracking},
+  author={Gordon, Daniel and Farhadi, Ali and Fox, Dieter},
+  journal={arXiv preprint arXiv:1705.06368},
+  year={2017}
+}
+```
