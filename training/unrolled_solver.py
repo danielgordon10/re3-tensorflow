@@ -44,7 +44,7 @@ HOST = 'localhost'
 NUM_ITERATIONS = int(1e6)
 PORT = 9997
 REPLAY_BUFFER_SIZE = 1024
-PARALLEL_SIZE = 1
+PARALLEL_SIZE = 4
 ENQUEUE_BATCH_SIZE = 1
 
 SIMULATION_WIDTH = simulater.IMAGE_WIDTH
@@ -178,7 +178,7 @@ def main(_):
     queue = tf_queue.TFQueue(sess,
             placeholders=[imagePlaceholder, labelPlaceholder],
             max_queue_size=REPLAY_BUFFER_SIZE,
-            max_queue_uses=1,
+            max_queue_uses=0,
             use_random_order=False,
             batch_size=batchSize)
 
@@ -523,7 +523,7 @@ def main(_):
                         print 'Staring test iter', test_iter_on
                         import subprocess
                         import json
-                        command = ['python', 'test_net.py', '--video_sample_rate', 10, '--no-display', '-v', FLAGS.testing_device]
+                        command = ['python', 'test_net.py', '--video_sample_rate', str(10), '--no-display', '-v', str(FLAGS.val_device)]
                         subprocess.call(command)
                         result = json.load(open('results.json', 'r'))
                         summary_str = sess.run(test_summary_op, feed_dict={

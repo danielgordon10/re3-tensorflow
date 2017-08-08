@@ -148,10 +148,10 @@ if __name__ == '__main__':
     data = get_datasets.get_data_for_dataset(FLAGS.dataset, FLAGS.mode)
     gt = data['gt']
     imageNames = data['image_paths']
-    sample_inds = np.where(gt[:,5] % FLAGS.video_sample_rate == 0)[0]
+    sample_inds = np.where(gt[:,4] % FLAGS.video_sample_rate == 0)[0]
     gt = gt[sample_inds, :]
     numImages = gt.shape[0]
-    imageNums = gt[:, 6]
+    imageNums = gt[:, 6].astype(int)
 
     if FLAGS.maxCount == -1:
         FLAGS.maxCount = numImages - FLAGS.skipCount

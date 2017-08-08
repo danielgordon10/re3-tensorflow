@@ -64,6 +64,9 @@ class Re3Tracker(object):
             image = scipy.misc.imread(image)
         else:
             image = image.copy()
+
+        image_read_time = time.time() - start_time
+
         if starting_box is not None:
             lstmState = [np.zeros((1, LSTM_SIZE)) for _ in xrange(4)]
             pastBBox = np.array(starting_box) # turns list into numpy array if not and copies for safety.
@@ -119,10 +122,11 @@ class Re3Tracker(object):
         self.tracked_data[unique_id] = (lstmState, outputBox, image, originalFeatures, forwardCount)
         end_time = time.time()
         if self.total_forward_count > 0:
-            self.time += (end_time - start_time)
+            self.time += (end_time - start_time - image_read_time)
         if SPEED_OUTPUT and self.total_forward_count % 100 == 0:
-            print 'Current tracking speed: %.3f FPS' % (1 / (end_time - start_time))
-            print 'Mean tracking speed:    %.3f FPS\n' % (self.total_forward_count / max(.00001, self.time))
+            print 'Current tracking speed:   %.3f FPS' % (1 / (end_time - start_time - image_read_time))
+            print 'Current image read speed: %.3f FPS' % (1 / (image_read_time))
+            print 'Mean tracking speed:      %.3f FPS\n' % (self.total_forward_count / max(.00001, self.time))
         return outputBox
 
 
@@ -139,6 +143,8 @@ class Re3Tracker(object):
             image = scipy.misc.imread(image)
         else:
             image = image.copy()
+
+        image_read_time = time.time() - start_time
 
         # Get inputs for each track.
         images = []
@@ -216,11 +222,12 @@ class Re3Tracker(object):
             self.tracked_data[unique_id] = (lstmState, outputBox, image, originalFeatures, forwardCount)
         end_time = time.time()
         if self.total_forward_count > 0:
-            self.time += (end_time - start_time)
+            self.time += (end_time - start_time - image_read_time)
         if SPEED_OUTPUT and self.total_forward_count % 100 == 0:
-            print 'Current tracking speed: %.3f FPS per object' % (len(unique_ids) / (end_time - start_time))
-            print 'Current tracking speed: %.3f FPS per frame' % (1 / (end_time - start_time))
-            print 'Mean tracking speed:    %.3f FPS per object\n' % (self.total_forward_count / max(.00001, self.time))
+            print 'Current tracking speed per object: %.3f FPS' % (len(unique_ids) / (end_time - start_time - image_read_time))
+            print 'Current tracking speed per frame:  %.3f FPS' % (1 / (end_time - start_time - image_read_time))
+            print 'Current image read speed:          %.3f FPS' % (1 / (image_read_time))
+            print 'Mean tracking speed per object:    %.3f FPS\n' % (self.total_forward_count / max(.00001, self.time))
         return outputBoxes
 
 
