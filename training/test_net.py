@@ -167,6 +167,7 @@ if __name__ == '__main__':
     initializeFrames = 0
     lostTarget = 0
     currentTrackLength = 0
+    initialize = True
 
     totalIou = 0
 

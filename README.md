@@ -31,7 +31,8 @@ To use it, download it [here](https://goo.gl/NWGXGM), extract the tar, and place
 
 ### More details than you wanted:
 1. demo:
-    * [data_demo.py](demo/data_demo.py) - A premade demo to show Re3 tracking an object.
+    * [image_demo.py](demo/image_demo.py) - A premade demo to show Re3 tracking an object.
+    * [batch_demo.py](demo/batch_demo.py) - A premade demo to show Re3 tracking one or multiple objects.
     * [webcam_demo.py](demo/webcam_demo.py) - A demo that uses a webcam feed to track an object. Simply click and drag the mouse around the object to track. When you release the mouse, tracking will begin. To track a new object, simply draw a new box.
 2. re3_utils:
     * simulater - The code that defines the simulation of object tracks.
