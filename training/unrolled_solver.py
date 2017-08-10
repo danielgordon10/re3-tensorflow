@@ -165,8 +165,7 @@ def main(_):
     tf.Graph().as_default()
     tf.logging.set_verbosity(tf.logging.INFO)
 
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
-    config = tf.ConfigProto(gpu_options=gpu_options)
+    config = tf.ConfigProto()
     config.gpu_options.allow_growth=True
     sess = tf.Session(config=config)
 
