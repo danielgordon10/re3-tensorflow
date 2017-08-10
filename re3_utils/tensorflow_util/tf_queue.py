@@ -60,7 +60,11 @@ class TFQueue(object):
     def get_feed_dict(self):
         self.lock.acquire()
         if self.use_random_order:
-            chosen_inds = np.random.choice(len(self.data_buffer), self.enqueue_batch_size, replace=False)
+            if self.max_queue_uses > 0:
+                usable_inds = np.where(self.data_counts[:len(self.data_buffer)] < self.max_queue_uses)[0]
+            else:
+                usable_inds = np.arange(len(self.data_buffer))
+            chosen_inds = np.random.choice(usable_inds, self.enqueue_batch_size, replace=False)
         else:
             chosen_inds = np.lexsort((np.random.random(len(self.data_buffer)), self.data_counts[:len(self.data_buffer)]))[:self.enqueue_batch_size]
 
