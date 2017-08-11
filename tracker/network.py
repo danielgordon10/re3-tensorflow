@@ -141,11 +141,8 @@ def inference(inputs, num_unrolls, train, batch_size=None, prevLstmState=None, r
                 lstmVars = [var for var in tf.trainable_variables() if 'lstm2' in var.name]
                 for var in lstmVars:
                     tf_util.variable_summaries(var, var.name[:-2])
-
-        with tf.variable_scope('lstm_output_concat'):
-            # BxTxC
-            outputs_concat = tf.concat(lstm2_outputs, 0)
-            outputs_reshape = tf_util.remove_axis(outputs_concat, 1)
+            # (BxT)xC
+            outputs_reshape = tf_util.remove_axis(lstm2_outputs, 1)
 
         # Final FC layer.
         with tf.variable_scope('fc_output'):

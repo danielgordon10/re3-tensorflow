@@ -83,7 +83,7 @@ class TFQueue(object):
                         len(self.data_buffer),
                         (len(self.data_buffer) - len(self.data_counts[self.data_counts > 0])),
                         np.max(self.data_counts),
-                        np.median(self.data_counts)))
+                        np.median(self.data_counts[:len(self.data_buffer)])))
             else:
                 print('Buffer Full. Num unused: %d  Max times used: %d  Median times used: %d\n' % (
                         (len(self.data_buffer) - len(self.data_counts[self.data_counts > 0])),
