@@ -142,7 +142,7 @@ def main(_):
     np.set_printoptions(precision=4)
 
     # Read in and format GT
-    # dict from (dataset_ind, video_id, video_image_id, track_id) to line in labels array
+    # dict from (dataset_ind, video_id, track_id, image_id) to line in labels array
     key_lookup = dict()
     datasets = []
 
@@ -169,7 +169,7 @@ def main(_):
     config.gpu_options.allow_growth=True
     sess = tf.Session(config=config)
 
-    imagePlaceholder = tf.placeholder(tf.float32, shape=(ENQUEUE_BATCH_SIZE, delta * 2, CROP_SIZE, CROP_SIZE, 3))
+    imagePlaceholder = tf.placeholder(tf.uint8, shape=(ENQUEUE_BATCH_SIZE, delta * 2, CROP_SIZE, CROP_SIZE, 3))
     labelPlaceholder = tf.placeholder(tf.float32, shape=(ENQUEUE_BATCH_SIZE, delta, 4))
     learningRate = tf.placeholder(tf.float32)
 
@@ -204,14 +204,14 @@ def main(_):
 
     if ',' in FLAGS.cuda_visible_devices:
         with tf.device('/gpu:1'):
-            targetImagePlaceholder = tf.placeholder(tf.float32, shape=(2, CROP_SIZE, CROP_SIZE, 3))
+            targetImagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
             prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in xrange(4)])
             initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in xrange(4)])
             targetOutputs, state1, state2 = network.inference(
                     targetImagePlaceholder, num_unrolls=1, train=False,
                     prevLstmState=prevLstmState, reuse=True)
     else:
-        targetImagePlaceholder = tf.placeholder(tf.float32, shape=(2, CROP_SIZE, CROP_SIZE, 3))
+        targetImagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
         prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in xrange(4)])
         initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in xrange(4)])
         targetOutputs, state1, state2 = network.inference(

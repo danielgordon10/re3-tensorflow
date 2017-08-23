@@ -35,7 +35,7 @@ class Re3Tracker(object):
             os.environ['CUDA_VISIBLE_DEVICES'] = str(GPU_ID)
         basedir = os.path.dirname(__file__)
         tf.Graph().as_default()
-        self.targetImagePlaceholder = tf.placeholder(tf.float32, shape=(None, CROP_SIZE, CROP_SIZE, 3))
+        self.targetImagePlaceholder = tf.placeholder(tf.uint8, shape=(None, CROP_SIZE, CROP_SIZE, 3))
         self.prevLstmState = tuple([tf.placeholder(tf.float32, shape=(None, LSTM_SIZE)) for _ in xrange(4)])
         self.batch_size = tf.placeholder(tf.int32, shape=())
         self.targetOutputs, self.state1, self.state2 = network.inference(

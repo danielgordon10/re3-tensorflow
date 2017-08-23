@@ -17,6 +17,7 @@ bias_initializer = tf.zeros_initializer()
 prelu_initializer = tf.constant_initializer(0.25)
 
 def alexnet_conv_layers(input, batch_size, num_unrolls):
+    input = tf.to_float(input) - IMAGENET_MEAN
     with tf.variable_scope('conv1'):
         conv1 = tf_util.conv_layer(input, 96, 11, 4, padding='VALID')
         pool1 = tf.nn.max_pool(
@@ -81,23 +82,17 @@ def alexnet_conv_layers(input, batch_size, num_unrolls):
 
         # Split and merge image pairs
         # (BxTx2)xHxWxC
-        pool5_reshape = tf.reshape(skip_concat, tf.stack([batch_size, num_unrolls, 2, skip_concat_shape[-1]]))
-        # Split on 2
-        pool5_split = tf.split(pool5_reshape, 2, 2)
-        # Merge on C
-        # BxTxHxWxC
-        pool5_concat = tf.concat(pool5_split, 3)
-        # BxTxHxWxC
-        reshaped = tf_util.remove_axis(pool5_concat, 1)
+        pool5_reshape = tf.reshape(skip_concat, [batch_size, num_unrolls, 2, skip_concat_shape[-1]])
+        # (BxT)x(2xHxWxC)
+        reshaped = tf_util.remove_axis(pool5_reshape, [1,3])
 
-    return reshaped
+        return reshaped
 
 def inference(inputs, num_unrolls, train, batch_size=None, prevLstmState=None, reuse=None):
     # Data should be in order BxTx2xHxWxC where T is the number of unrolls
     # Mean subtraction
     if batch_size is None:
         batch_size = inputs.get_shape().as_list()[0] / (num_unrolls * 2)
-    inputs -= IMAGENET_MEAN
 
     variable_list = []
 
@@ -146,7 +141,7 @@ def inference(inputs, num_unrolls, train, batch_size=None, prevLstmState=None, r
 
         # Final FC layer.
         with tf.variable_scope('fc_output'):
-            fc_output_out = tf_util.fc_layer(outputs_reshape, 4)
+            fc_output_out = tf_util.fc_layer(outputs_reshape, 4, activation=None)
 
     if prevLstmState is not None:
         return fc_output_out, state1, state2
