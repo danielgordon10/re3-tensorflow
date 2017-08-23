@@ -514,7 +514,7 @@ def main(_):
                             feed_dict={learningRate : 1e-5 if iteration < 10000 else 1e-6})
                     summary_writer.add_summary(summary_str, iteration)
                     summary_writer.flush()
-                if (FLAGS.run_val and numIters == 1 or iteration % 500 == 0):
+                if (FLAGS.run_val and (numIters == 1 or iteration % 500 == 0)):
                     # Run a validation test in a separate process.
                     def test_func():
                         test_iter_on = iteration
