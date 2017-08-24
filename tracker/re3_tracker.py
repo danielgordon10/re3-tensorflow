@@ -25,13 +25,13 @@ from constants import LOG_DIR
 from constants import GPU_ID
 from constants import MAX_TRACK_LENGTH
 
-os.environ['CUDA_VISIBLE_DEVICES'] = str(GPU_ID)
-
 SPEED_OUTPUT = True
 
 class Re3Tracker(object):
     def __init__(self, gpu_id=None):
         if gpu_id is not None:
+            os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
+        else:
             os.environ['CUDA_VISIBLE_DEVICES'] = str(GPU_ID)
         basedir = os.path.dirname(__file__)
         tf.Graph().as_default()

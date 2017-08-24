@@ -102,8 +102,6 @@ def runFrame(imOn, gtOn):
     if DISPLAY:
         imageToDraw[0,0] = 255
         imageToDraw[0,1] = 0
-        imageToDraw[0,0] = 255
-        imageToDraw[0,1] = 0
         titles.append(
                 'Frame %d, IOU %.2f, Mean IOU %.2f, Robustness %.2f, Dropped %d' %
                 (gtOn, iou, meanIou, robustness, lostTarget))
