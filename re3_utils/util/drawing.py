@@ -18,7 +18,7 @@ def subplot(plots, rows, cols, outputWidth, outputHeight, border=BORDER,
     returnedImage = np.full((
         (outputHeight + 2 * border) * rows,
         (outputWidth + 2 * border) * cols,
-        3), .75, dtype=np.float32)
+        3), 191, dtype=np.uint8)
     if fancy_text:
         from PIL import Image, ImageDraw, ImageFont
         FANCY_FONT = ImageFont.truetype(
@@ -62,14 +62,13 @@ def subplot(plots, rows, cols, outputWidth, outputHeight, border=BORDER,
                     im = np.lib.pad(
                             im, ((pad0, pad1), (0, 0), (0, 0)),
                             'constant', constant_values=0)
-            if im.dtype == np.uint8:
-                im = im.astype(np.float32) / 255.0
+            if im.dtype != np.uint8:
+                im *= 255
+                im = im.astype(np.uint8)
             if (titles is not None and len(titles) > 1 and
                     len(titles) > col + cols * row and
                     len(titles[col + cols * row]) > 0):
                 if fancy_text:
-                    im *= 255
-                    im = im.astype(np.uint8)
                     im = Image.fromarray(im)
                     draw = ImageDraw.Draw(im)
                     for x in xrange(9,12):
@@ -78,8 +77,7 @@ def subplot(plots, rows, cols, outputWidth, outputHeight, border=BORDER,
                                     font=FANCY_FONT)
                     draw.text((10, 10), titles[col + cols * row], (255,255,255),
                             font=FANCY_FONT)
-                    im = np.array(im)
-                    im = np.array(im).astype(np.float32) / 255.0
+                    im = np.array(im, dtype=np.uint8)
                 else:
                     cv2.putText(im, titles[col + cols * row], (10, 30), CV_FONT, .5, [0,0,0], 4)
                     cv2.putText(im, titles[col + cols * row], (10, 30), CV_FONT, .5, [1,1,1], 1)
@@ -92,8 +90,6 @@ def subplot(plots, rows, cols, outputWidth, outputHeight, border=BORDER,
     # for one long title
     if titles is not None and len(titles) == 1:
         if fancy_text:
-            im *= 255
-            im = im.astype(np.uint8)
             im = Image.fromarray(im)
             draw = ImageDraw.Draw(im)
             for x in xrange(9,12):
@@ -102,8 +98,7 @@ def subplot(plots, rows, cols, outputWidth, outputHeight, border=BORDER,
                             font=FANCY_FONT)
             draw.text((10, 10), titles[0], (255,255,255),
                     font=FANCY_FONT)
-            im = np.array(im)
-            im = np.array(im).astype(np.float32) / 255.0
+            im = np.array(im, dtype=np.uint8)
         else:
             cv2.putText(im, titles[0], (10, 30), CV_FONT, .5, [0,0,0], 4)
             cv2.putText(im, titles[0], (10, 30), CV_FONT, .5, [1,1,1], 1)

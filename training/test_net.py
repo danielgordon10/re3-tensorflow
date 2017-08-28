@@ -190,7 +190,7 @@ if __name__ == '__main__':
             if FLAGS.record:
                 if imOn % 100 == 0:
                     print imOn
-                writer.append_data(im)
+                writer.append_data(im[:,:,::-1])
         else:
             results = runFrame(imageNums[int(imOn)], int(imOn))
         if imOn % 100 == 0 or (imOn + 1) == maxIter:
