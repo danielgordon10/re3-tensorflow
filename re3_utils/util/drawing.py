@@ -80,7 +80,7 @@ def subplot(plots, rows, cols, outputWidth, outputHeight, border=BORDER,
                     im = np.array(im, dtype=np.uint8)
                 else:
                     cv2.putText(im, titles[col + cols * row], (10, 30), CV_FONT, .5, [0,0,0], 4)
-                    cv2.putText(im, titles[col + cols * row], (10, 30), CV_FONT, .5, [1,1,1], 1)
+                    cv2.putText(im, titles[col + cols * row], (10, 30), CV_FONT, .5, [255,255,255], 1)
             returnedImage[
                 border + (outputHeight + border) * row :
                         (outputHeight + border) * (row + 1),
@@ -101,7 +101,7 @@ def subplot(plots, rows, cols, outputWidth, outputHeight, border=BORDER,
             im = np.array(im, dtype=np.uint8)
         else:
             cv2.putText(im, titles[0], (10, 30), CV_FONT, .5, [0,0,0], 4)
-            cv2.putText(im, titles[0], (10, 30), CV_FONT, .5, [1,1,1], 1)
+            cv2.putText(im, titles[0], (10, 30), CV_FONT, .5, [255,255,255], 1)
 
     return im
 
