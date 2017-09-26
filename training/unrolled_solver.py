@@ -176,7 +176,7 @@ def main(_):
     queue = tf_queue.TFQueue(sess,
             placeholders=[imagePlaceholder, labelPlaceholder],
             max_queue_size=REPLAY_BUFFER_SIZE,
-            max_queue_uses=0,
+            max_queue_uses=1,
             use_random_order=False,
             batch_size=batchSize)
 
@@ -406,7 +406,7 @@ def main(_):
                 plots = [bigImage0, bigImage1, image0, image1, label]
                 subplot = drawing.subplot(plots, 3, 2, outputWidth=OUTPUT_WIDTH, outputHeight=OUTPUT_HEIGHT, border=5)
                 cv2.imshow('debug', subplot[:,:,::-1])
-                cv2.waitKey(100)
+                cv2.waitKey(0)
 
         if mirroredInds:
             tImage = np.fliplr(
@@ -571,7 +571,7 @@ def main(_):
                         plots = [image0, image1, None, outputImage]
                         subplot = drawing.subplot(plots, 2, 2, outputWidth=OUTPUT_WIDTH, outputHeight=OUTPUT_HEIGHT, border=5)
                         cv2.imshow('debug', subplot[:,:,::-1])
-                        cv2.waitKey(100)
+                        cv2.waitKey(0)
                 queue.lock.release()
     except KeyboardInterrupt:
         if not debug:
