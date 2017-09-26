@@ -10,6 +10,24 @@ Re3 is a real-time recurrent regression tracker. It offers accuracy and robustne
 5. [CUDA (Strongly Recommended)](https://developer.nvidia.com/cuda-downloads).
 6. [cuDNN (Recommended)](https://developer.nvidia.com/cudnn).
 
+## First Time Setup:
+```bash
+git clone git@gitlab.cs.washington.edu:xkcd/re3-tensorflow.git
+cd re3-tensorflow
+sudo apt-get install python-virtualenv
+virtualenv venv --system-site-packages
+source venv/bin/activate
+pip install -r requirements.txt
+```
+### Enter the virtualenv in a later session to use the installed libraries.
+```bash
+source venv/bin/activate
+```
+### To exit the virtualenv
+```bash
+deactivate
+```
+
 ## Model:
 The model weights we used in our paper were ported from Caffe to Tensorflow. Because they deal with padding differently, results are slightly different, but the model still works well.
 To use it, download it [here](https://goo.gl/NWGXGM), extract the tar, and place in your log directory (mine is "logs").
