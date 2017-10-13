@@ -55,6 +55,7 @@ USE_NETWORK_PROB = 0.8
 REAL_MOTION_PROB = 1.0 / 8
 AREA_CUTOFF = 0.25
 
+# Get a sequence from the batch cache.
 def getData():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((HOST, PORT))
@@ -94,6 +95,7 @@ def getData():
     return (key, images)
 
 
+# Randomly jitter the box for a bit of noise.
 def add_noise(bbox, prevBBox, imageWidth, imageHeight):
     numTries = 0
     bboxXYWHInit = bb_util.xyxy_to_xywh(bbox)
@@ -113,6 +115,7 @@ def add_noise(bbox, prevBBox, imageWidth, imageHeight):
 
     return fix_bbox_intersection(bb_util.xywh_to_xyxy(bboxXYWH), prevBBox, imageWidth, imageHeight)
 
+# Make sure there is a minimum intersection with the ground truth box and the visible crop.
 def fix_bbox_intersection(bbox, gtBox, imageWidth, imageHeight):
     if type(bbox) == list:
         bbox = np.array(bbox)
@@ -127,7 +130,7 @@ def fix_bbox_intersection(bbox, gtBox, imageWidth, imageHeight):
     return bbox
 
 
-def main(_):
+def main(FLAGS):
     global PORT, delta, REPLAY_BUFFER_SIZE
 
     simulater.make_paths()
@@ -204,18 +207,18 @@ def main(_):
 
     if ',' in FLAGS.cuda_visible_devices:
         with tf.device('/gpu:1'):
-            imagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
+            forwardNetworkImagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
             prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in xrange(4)])
             initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in xrange(4)])
             networkOutputs, state1, state2 = network.inference(
-                    imagePlaceholder, num_unrolls=1, train=False,
+                    forwardNetworkImagePlaceholder, num_unrolls=1, train=False,
                     prevLstmState=prevLstmState, reuse=True)
     else:
-        imagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
+        forwardNetworkImagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
         prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in xrange(4)])
         initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in xrange(4)])
         networkOutputs, state1, state2 = network.inference(
-                imagePlaceholder, num_unrolls=1, train=False,
+                forwardNetworkImagePlaceholder, num_unrolls=1, train=False,
                 prevLstmState=prevLstmState, reuse=True)
 
     sess.run(init)
@@ -351,7 +354,7 @@ def main(_):
                         lstmState = initialLstmState,
 
                     feed_dict = {
-                            imagePlaceholder : tImage[dd,...],
+                            forwardNetworkImagePlaceholder : tImage[dd,...],
                             prevLstmState : lstmState
                             }
                     networkOuts, s1, s2 = sess.run([networkOutputs, state1, state2], feed_dict=feed_dict)
@@ -569,6 +572,7 @@ if __name__ == '__main__':
     parser.add_argument('--run_val', action='store_true', default=False)
     parser.add_argument('--val_device', type=str, default='0', help='Device number or string for val process to use.')
     parser.add_argument('-m', '--max_steps', type=int, default=NUM_ITERATIONS, help='Number of steps to run trainer.')
-    FLAGS, unparsed = parser.parse_known_args()
-    tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+    FLAGS = parser.parse_args()
+    #tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+    main(FLAGS)
 
