@@ -1,3 +1,4 @@
+import pdb
 import argparse
 import cPickle
 import cv2
@@ -37,21 +38,20 @@ from constants import GPU_ID
 from constants import LOG_DIR
 from constants import OUTPUT_WIDTH
 from constants import OUTPUT_HEIGHT
-from constants import OUTPUT_SIZE
 
 HOST = 'localhost'
 NUM_ITERATIONS = int(1e6)
 PORT = 9997
 REPLAY_BUFFER_SIZE = 1024
-PARALLEL_SIZE = 4
+PARALLEL_SIZE = 1
 ENQUEUE_BATCH_SIZE = 1
 
 SIMULATION_WIDTH = simulater.IMAGE_WIDTH
 SIMULATION_HEIGHT = simulater.IMAGE_HEIGHT
 simulater.NUM_DISTRACTORS = 20
 
-USE_IMAGENET_PROB = .5
-USE_TARGET_PROB = .8
+USE_IMAGENET_PROB = 0.5
+USE_NETWORK_PROB = 0.8
 REAL_MOTION_PROB = 1.0 / 8
 AREA_CUTOFF = 0.25
 
@@ -204,18 +204,18 @@ def main(_):
 
     if ',' in FLAGS.cuda_visible_devices:
         with tf.device('/gpu:1'):
-            targetImagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
+            imagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
             prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in xrange(4)])
             initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in xrange(4)])
-            targetOutputs, state1, state2 = network.inference(
-                    targetImagePlaceholder, num_unrolls=1, train=False,
+            networkOutputs, state1, state2 = network.inference(
+                    imagePlaceholder, num_unrolls=1, train=False,
                     prevLstmState=prevLstmState, reuse=True)
     else:
-        targetImagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
+        imagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
         prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in xrange(4)])
         initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in xrange(4)])
-        targetOutputs, state1, state2 = network.inference(
-                targetImagePlaceholder, num_unrolls=1, train=False,
+        networkOutputs, state1, state2 = network.inference(
+                imagePlaceholder, num_unrolls=1, train=False,
                 prevLstmState=prevLstmState, reuse=True)
 
     sess.run(init)
@@ -313,7 +313,7 @@ def main(_):
                 bboxOn = datasets[newKey[0]][imageIndex, :4].copy()
             if dd == 0:
                 noisyBox = bboxOn.copy()
-            elif not realMotion and not useImagenetInds and gtType >= USE_TARGET_PROB:
+            elif not realMotion and not useImagenetInds and gtType >= USE_NETWORK_PROB:
                 noisyBox = add_noise(bboxOn, bboxOn, images[0].shape[1], images[0].shape[0])
             else:
                 noisyBox = fix_bbox_intersection(bboxPrev, bboxOn, images[0].shape[1], images[0].shape[0])
@@ -338,44 +338,27 @@ def main(_):
                 tImage[dd,1,...] = im_util.get_cropped_input(
                         images[dd], noisyBox, CROP_PAD, CROP_SIZE)[0]
 
-            shiftedBBox = bb_util.xyxy_to_xywh(bboxOn, 0, images[0].shape[1], images[0].shape[0])
-            noisyBoxXYWH = bb_util.xyxy_to_xywh(noisyBox, 0, images[0].shape[1], images[0].shape[0])
-            shiftedBBox[[0,1]] -= noisyBoxXYWH[[0,1]]
-            shiftedBBox[[0,1]] *= OUTPUT_SIZE / noisyBoxXYWH[[2,3]]
-            shiftedBBox[[0,1]] += OUTPUT_SIZE * CROP_PAD / 2
-            shiftedBBox[[2,3]] *= OUTPUT_SIZE / noisyBoxXYWH[[2,3]]
-            shiftedBBox[[0,1]] = np.minimum(OUTPUT_SIZE * CROP_PAD, shiftedBBox[[0,1]])
-            shiftedBBox[[0,1]] = np.maximum(0, shiftedBBox[[0,1]])
+            shiftedBBox = bb_util.to_crop_coordinate_system(bboxOn, noisyBox, CROP_PAD, 1)
+            shiftedBBoxXYWH = bb_util.xyxy_to_xywh(shiftedBBox)
+            xywhLabels[dd,:] = shiftedBBoxXYWH
 
-            shiftedBBoxXYWH = shiftedBBox.copy()
-
-            shiftedBBox = bb_util.xywh_to_xyxy(
-                    shiftedBBox, 0, OUTPUT_SIZE * CROP_PAD,
-                    OUTPUT_SIZE * CROP_PAD, True)
-
-            shiftedBBoxXYWH[[2,3]] = np.maximum(shiftedBBoxXYWH[[2,3]], 1)
-            xywhLabels[dd,:] = shiftedBBoxXYWH * 1.0 / (OUTPUT_SIZE * CROP_PAD)
 
             # Get next box.
-            if gtType < USE_TARGET_PROB:
+            if gtType < USE_NETWORK_PROB:
                 if dd < delta - 1:
                     # Get next predicted box.
                     if dd == 0:
                         lstmState = initialLstmState,
 
                     feed_dict = {
-                            targetImagePlaceholder : tImage[dd,...],
+                            imagePlaceholder : tImage[dd,...],
                             prevLstmState : lstmState
                             }
-                    targetOuts, s1, s2 = sess.run([targetOutputs, state1, state2], feed_dict=feed_dict)
+                    networkOuts, s1, s2 = sess.run([networkOutputs, state1, state2], feed_dict=feed_dict)
                     lstmState = (s1[0], s1[1], s2[0], s2[1])
 
-                    xyxyPred = targetOuts.squeeze() / 10
-                    noisyBoxPadded = bb_util.scale_bbox(noisyBox, CROP_PAD)
-                    pastBoxXYWH = bb_util.xyxy_to_xywh(noisyBoxPadded)
-                    outputBox = xyxyPred * pastBoxXYWH[[2,3,2,3]]
-                    outputBox += noisyBoxPadded[[0,1,0,1]]
-                    outputBox = bb_util.clip_bbox(outputBox, 0, images[0].shape[1], images[0].shape[0])
+                    xyxyPred = networkOuts.squeeze() / 10
+                    outputBox = bb_util.from_crop_coordinate_system(xyxyPred, noisyBox, CROP_PAD, 1)
 
                     bboxPrev = outputBox
                     if debug:
@@ -389,16 +372,16 @@ def main(_):
                 image1 = tImage[dd,1,...].copy()
 
                 xyxyLabel = bb_util.xywh_to_xyxy(xywhLabels[dd,:].squeeze())
-                print 'xyxy raw', xyxyLabel, 'actual', xyxyLabel * (OUTPUT_SIZE * CROP_PAD)
-                label = np.zeros((OUTPUT_SIZE * CROP_PAD, OUTPUT_SIZE * CROP_PAD))
-                drawing.drawRect(label,  xyxyLabel * OUTPUT_SIZE * CROP_PAD, 0, 1)
+                print 'xyxy raw', xyxyLabel, 'actual', xyxyLabel * CROP_PAD
+                label = np.zeros((CROP_PAD, CROP_PAD))
+                drawing.drawRect(label,  xyxyLabel * CROP_PAD, 0, 1)
                 drawing.drawRect(image0, bb_util.xywh_to_xyxy(np.full((4,1), .5) * CROP_SIZE), 2, [255,0,0])
                 bigImage0 = images[max(dd-1,0)].copy()
                 bigImage1 = images[dd].copy()
                 if dd < len(cropBBoxes):
                     drawing.drawRect(bigImage1, bboxes[dd], 5, [255,0,0])
                     drawing.drawRect(image1, cropBBoxes[dd] * CROP_SIZE, 1, [0,255,0])
-                    print 'pred raw', cropBBoxes[dd], 'actual', cropBBoxes[dd] * (OUTPUT_SIZE * CROP_PAD)
+                    print 'pred raw', cropBBoxes[dd], 'actual', cropBBoxes[dd] * CROP_PAD
                 print '\n'
 
                 label[0,0] = 1
@@ -549,27 +532,20 @@ def main(_):
                         image0 = images[bb,dd,0,...]
                         image1 = images[bb,dd,1,...]
 
-                        outputImage = np.zeros((OUTPUT_SIZE * CROP_PAD, OUTPUT_SIZE * CROP_PAD))
-
                         label = labels[bb,dd,:]
                         xyxyLabel = label / 10
-                        labelBox = xyxyLabel * OUTPUT_SIZE * CROP_PAD
-                        drawing.drawRect(outputImage,  labelBox, 0, 1)
+                        labelBox = xyxyLabel * CROP_PAD
 
                         output = outputs[bb,dd,...]
                         xyxyPred = output / 10
-                        outputBox = xyxyPred * OUTPUT_SIZE * CROP_PAD
-                        drawing.drawRect(outputImage,  outputBox, 0, 2)
-
-                        outputImage[0,0] = 2
-                        outputImage[0,1] = 0
+                        outputBox = xyxyPred * CROP_PAD
 
                         drawing.drawRect(image0, bb_util.xywh_to_xyxy(np.full((4,1), .5) * CROP_SIZE), 2, [255,0,0])
                         drawing.drawRect(image1, xyxyLabel * CROP_SIZE, 2, [0,255,0])
                         drawing.drawRect(image1, xyxyPred * CROP_SIZE, 2, [255,0,0])
 
-                        plots = [image0, image1, None, outputImage]
-                        subplot = drawing.subplot(plots, 2, 2, outputWidth=OUTPUT_WIDTH, outputHeight=OUTPUT_HEIGHT, border=5)
+                        plots = [image0, image1]
+                        subplot = drawing.subplot(plots, 1, 2, outputWidth=OUTPUT_WIDTH, outputHeight=OUTPUT_HEIGHT, border=5)
                         cv2.imshow('debug', subplot[:,:,::-1])
                         cv2.waitKey(0)
                 queue.lock.release()

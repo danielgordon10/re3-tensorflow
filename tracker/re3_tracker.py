@@ -20,7 +20,6 @@ from re3_utils.tensorflow_util import tf_util
 from constants import CROP_SIZE
 from constants import CROP_PAD
 from constants import LSTM_SIZE
-from constants import OUTPUT_SIZE
 from constants import LOG_DIR
 from constants import GPU_ID
 from constants import MAX_TRACK_LENGTH
@@ -35,11 +34,11 @@ class Re3Tracker(object):
             os.environ['CUDA_VISIBLE_DEVICES'] = str(GPU_ID)
         basedir = os.path.dirname(__file__)
         tf.Graph().as_default()
-        self.targetImagePlaceholder = tf.placeholder(tf.uint8, shape=(None, CROP_SIZE, CROP_SIZE, 3))
+        self.imagePlaceholder = tf.placeholder(tf.uint8, shape=(None, CROP_SIZE, CROP_SIZE, 3))
         self.prevLstmState = tuple([tf.placeholder(tf.float32, shape=(None, LSTM_SIZE)) for _ in xrange(4)])
         self.batch_size = tf.placeholder(tf.int32, shape=())
-        self.targetOutputs, self.state1, self.state2 = network.inference(
-                self.targetImagePlaceholder, num_unrolls=1, batch_size=self.batch_size, train=False,
+        self.outputs, self.state1, self.state2 = network.inference(
+                self.imagePlaceholder, num_unrolls=1, batch_size=self.batch_size, train=False,
                 prevLstmState=self.prevLstmState)
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
@@ -81,34 +80,29 @@ class Re3Tracker(object):
         croppedInput1,_ = im_util.get_cropped_input(image, pastBBox, CROP_PAD, CROP_SIZE)
 
         feed_dict = {
-                self.targetImagePlaceholder : [croppedInput0, croppedInput1],
+                self.imagePlaceholder : [croppedInput0, croppedInput1],
                 self.prevLstmState : lstmState,
                 self.batch_size : 1,
                 }
-        rawOutput, s1, s2 = self.sess.run([self.targetOutputs, self.state1, self.state2], feed_dict=feed_dict)
+        rawOutput, s1, s2 = self.sess.run([self.outputs, self.state1, self.state2], feed_dict=feed_dict)
         lstmState = [s1[0], s1[1], s2[0], s2[1]]
         if forwardCount == 0:
             originalFeatures = [s1[0], s1[1], s2[0], s2[1]]
 
         prevImage = image
 
-        outputBox = (rawOutput / 10.0) * OUTPUT_SIZE * CROP_PAD
-
         # Shift output box to full image coordinate system.
-        pastBoxXYWH = bb_util.xyxy_to_xywh(pastBBoxPadded)
-        outputBox = (rawOutput.squeeze() / 10.0) * pastBoxXYWH[[2,3,2,3]]
-        outputBox += pastBBoxPadded[[0,1,0,1]]
-        outputBox = bb_util.clip_bbox(outputBox, 0, image.shape[1], image.shape[0])
+        outputBox = bb_util.from_crop_coordinate_system(rawOutput.squeeze() / 10.0, pastBBoxPadded, 1, 1)
 
         if forwardCount > 0 and forwardCount % MAX_TRACK_LENGTH == 0:
             croppedInput, _ = im_util.get_cropped_input(image, outputBox, CROP_PAD, CROP_SIZE)
             input = np.tile(croppedInput[np.newaxis,...], (2,1,1,1))
             feed_dict = {
-                    self.targetImagePlaceholder : input,
+                    self.imagePlaceholder : input,
                     self.prevLstmState : originalFeatures,
                     self.batch_size : 1,
                     }
-            rawOutput, s1, s2 = self.sess.run([self.targetOutputs, self.state1, self.state2], feed_dict=feed_dict)
+            rawOutput, s1, s2 = self.sess.run([self.outputs, self.state1, self.state2], feed_dict=feed_dict)
             lstmState = [s1[0], s1[1], s2[0], s2[1]]
 
         forwardCount += 1
@@ -176,11 +170,11 @@ class Re3Tracker(object):
             lstmStateArrays.append(np.array(state))
 
         feed_dict = {
-                self.targetImagePlaceholder : images,
+                self.imagePlaceholder : images,
                 self.prevLstmState : lstmStateArrays,
                 self.batch_size : len(images) / 2
                 }
-        rawOutput, s1, s2 = self.sess.run([self.targetOutputs, self.state1, self.state2], feed_dict=feed_dict)
+        rawOutput, s1, s2 = self.sess.run([self.outputs, self.state1, self.state2], feed_dict=feed_dict)
         outputBoxes = np.zeros((len(unique_ids), 4))
         for uu,unique_id in enumerate(unique_ids):
             lstmState, pastBBox, prevImage, originalFeatures, forwardCount = self.tracked_data[unique_id]
@@ -190,24 +184,19 @@ class Re3Tracker(object):
 
             prevImage = image
 
-            outputBox = (rawOutput[uu,:] / 10.0) * OUTPUT_SIZE * CROP_PAD
-
             # Shift output box to full image coordinate system.
             pastBBoxPadded = pastBBoxesPadded[uu]
-            pastBoxXYWH = bb_util.xyxy_to_xywh(pastBBoxPadded)
-            outputBox = (rawOutput[uu,:].squeeze() / 10.0) * pastBoxXYWH[[2,3,2,3]]
-            outputBox += pastBBoxPadded[[0,1,0,1]]
-            outputBox = bb_util.clip_bbox(outputBox, 0, image.shape[1], image.shape[0])
+            outputBox = bb_util.from_crop_coordinate_system(rawOutput[uu,:].squeeze() / 10.0, pastBBoxPadded, 1, 1)
 
             if forwardCount > 0 and forwardCount % MAX_TRACK_LENGTH == 0:
                 croppedInput, _ = im_util.get_cropped_input(image, outputBox, CROP_PAD, CROP_SIZE)
                 input = np.tile(croppedInput[np.newaxis,...], (2,1,1,1))
                 feed_dict = {
-                        self.targetImagePlaceholder : input,
+                        self.imagePlaceholder : input,
                         self.prevLstmState : originalFeatures,
                         self.batch_size : 1,
                         }
-                _, s1_new, s2_new = self.sess.run([self.targetOutputs, self.state1, self.state2], feed_dict=feed_dict)
+                _, s1_new, s2_new = self.sess.run([self.outputs, self.state1, self.state2], feed_dict=feed_dict)
                 lstmState = [s1_new[0], s1_new[1], s2_new[0], s2_new[1]]
 
             forwardCount += 1
