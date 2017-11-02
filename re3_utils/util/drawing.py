@@ -23,20 +23,19 @@ def subplot(plots, rows, cols, outputWidth, outputHeight, border=BORDER,
         from PIL import Image, ImageDraw, ImageFont
         FANCY_FONT = ImageFont.truetype(
             '/usr/share/fonts/truetype/roboto/hinted/Roboto-Bold.ttf', 20)
-    for row in xrange(rows):
-        for col in xrange(cols):
+    for row in range(rows):
+        for col in range(cols):
             if col + cols * row >= len(plots):
                 return returnedImage
             im = plots[col + cols * row]
             if im is None:
                 continue
-            im = im.squeeze()
-            imgMin = np.min(im)
-            imgMax = np.max(im)
-            im = ((im.astype(np.float32) - imgMin) /
-                    max((imgMax - imgMin), 0.0001))
+            if im.dtype != np.uint8 or len(im.shape) < 3:
+                im = im.astype(np.float32)
+                im -= np.min(im)
+                im *= 255 / np.max(im)
+                im = 255 - im.astype(np.uint8)
             if len(im.shape) < 3:
-                im = 255 - (im * 255).astype(np.uint8)
                 im = cv2.applyColorMap(
                         im, cv2.COLORMAP_JET)
             if im.shape != (outputHeight, outputWidth, 3):
@@ -47,6 +46,8 @@ def subplot(plots, rows, cols, outputWidth, outputHeight, border=BORDER,
                 else:
                     imWidth = im.shape[1] * outputHeight / im.shape[0]
                     imHeight = outputHeight
+                imWidth = int(imWidth)
+                imHeight = int(imHeight)
                 im = cv2.resize(
                         im, (imWidth, imHeight),
                         interpolation=cv2.INTER_NEAREST)
@@ -62,22 +63,21 @@ def subplot(plots, rows, cols, outputWidth, outputHeight, border=BORDER,
                     im = np.lib.pad(
                             im, ((pad0, pad1), (0, 0), (0, 0)),
                             'constant', constant_values=0)
-            if im.dtype != np.uint8:
-                im *= 255
-                im = im.astype(np.uint8)
             if (titles is not None and len(titles) > 1 and
                     len(titles) > col + cols * row and
                     len(titles[col + cols * row]) > 0):
                 if fancy_text:
+                    if im.dtype != np.uint8:
+                        im = im.astype(np.uint8)
                     im = Image.fromarray(im)
                     draw = ImageDraw.Draw(im)
-                    for x in xrange(9,12):
-                        for y in xrange(9, 12):
+                    for x in range(9,12):
+                        for y in range(9, 12):
                             draw.text((x, y), titles[col + cols * row], (0,0,0),
                                     font=FANCY_FONT)
                     draw.text((10, 10), titles[col + cols * row], (255,255,255),
                             font=FANCY_FONT)
-                    im = np.array(im, dtype=np.uint8)
+                    im = np.array(im)
                 else:
                     cv2.putText(im, titles[col + cols * row], (10, 30), CV_FONT, .5, [0,0,0], 4)
                     cv2.putText(im, titles[col + cols * row], (10, 30), CV_FONT, .5, [255,255,255], 1)
@@ -90,24 +90,26 @@ def subplot(plots, rows, cols, outputWidth, outputHeight, border=BORDER,
     # for one long title
     if titles is not None and len(titles) == 1:
         if fancy_text:
+            if im.dtype != np.uint8:
+                im = im.astype(np.uint8)
             im = Image.fromarray(im)
             draw = ImageDraw.Draw(im)
-            for x in xrange(9,12):
-                for y in xrange(9, 12):
+            for x in range(9,12):
+                for y in range(9, 12):
                     draw.text((x, y), titles[0], (0,0,0),
                             font=FANCY_FONT)
             draw.text((10, 10), titles[0], (255,255,255),
                     font=FANCY_FONT)
-            im = np.array(im, dtype=np.uint8)
+            im = np.array(im)
         else:
-            cv2.putText(im, titles[0], (10, 30), CV_FONT, .5, [0,0,0], 4)
-            cv2.putText(im, titles[0], (10, 30), CV_FONT, .5, [255,255,255], 1)
+            cv2.putText(im, titles[0], (10, 30), CV_FONT, 128, [0,0,0], 4)
+            cv2.putText(im, titles[0], (10, 30), CV_FONT, 128, [1,1,1], 1)
 
     return im
 
 # BBoxes are [x1 y1 x2 y2]
 def drawRect(image, bbox, padding, color):
-    import bb_util
+    from my_utils.util import bb_util
     imageHeight = image.shape[0]
     imageWidth = image.shape[1]
     bbox = np.round(np.array(bbox)) # mostly just for copying
@@ -128,6 +130,10 @@ def drawPoint(image, point, size, padding, color):
         point = np.array(point)
     point = tuple(point.astype(int).tolist())
     cv2.circle(image, point, int(size), color, int(padding))
+    '''
+    bbox = xywh_to_xyxy([point[0], point[1], size, size])
+    drawRect(image, bbox, padding, color)
+    '''
     return image
 
 def images_to_sprite(data, padsize=1, padval=0):
