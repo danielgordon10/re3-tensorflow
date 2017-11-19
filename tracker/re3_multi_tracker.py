@@ -48,7 +48,7 @@ class Re3TrackerFactory(object):
 
 
 class Re3Tracker(object):
-    def __init__(self, sess, tracked_data, lock, reuse=False, gpu_id=0:
+    def __init__(self, sess, tracked_data, lock, reuse=False, gpu_id=0):
         if gpu_id is not None:
             os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
         else:
