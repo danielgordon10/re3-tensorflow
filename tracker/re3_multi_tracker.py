@@ -35,17 +35,17 @@ class Re3TrackerFactory(object):
         self.is_initialized = False
 
     def create_tracker(self, gpu_id=0):
-        tracker = Re3Tracker(self, reuse=self.is_initialized, gpu_id)
+        tracker = Re3Tracker(reuse=self.is_initialized, gpu_id)
         if not self.is_initialized:
             basedir = os.path.dirname(__file__)
             ckpt = tf.train.get_checkpoint_state(os.path.join(basedir, '..', LOG_DIR, 'checkpoints'))
             tf_util.restore(self.sess, ckpt.model_checkpoint_path)
-            self.is_initialized
+            self.is_initialized = True
         return tracker
 
 
 class Re3Tracker(object):
-    def __init__(self, factory, reuse=False, gpu_id=0):
+    def __init__(self, reuse=False, gpu_id=0):
         if gpu_id is not None:
             os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
         else:
