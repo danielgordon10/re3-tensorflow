@@ -4,6 +4,7 @@ import numpy as np
 import os
 import tensorflow as tf
 import time
+import threading
 
 import sys
 import os.path
@@ -33,9 +34,11 @@ class Re3TrackerFactory(object):
         config.gpu_options.allow_growth = True
         self.sess = tf.Session(config=config)
         self.is_initialized = False
+        self.tracked_data = {}
+        self.lock = threading.Lock()
 
     def create_tracker(self, gpu_id=0):
-        tracker = Re3Tracker(self.sess, reuse=self.is_initialized, gpu_id=gpu_id)
+        tracker = Re3Tracker(self.sess, tracked_data=self.tracked_data, lock=lock, reuse=self.is_initialized, gpu_id=gpu_id)
         if not self.is_initialized:
             basedir = os.path.dirname(__file__)
             ckpt = tf.train.get_checkpoint_state(os.path.join(basedir, '..', LOG_DIR, 'checkpoints'))
@@ -45,7 +48,7 @@ class Re3TrackerFactory(object):
 
 
 class Re3Tracker(object):
-    def __init__(self, sess, reuse=False, gpu_id=0):
+    def __init__(self, sess, tracked_data, lock, reuse=False, gpu_id=0:
         if gpu_id is not None:
             os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
         else:
@@ -61,7 +64,8 @@ class Re3Tracker(object):
                 self.imagePlaceholder, num_unrolls=1, batch_size=self.batch_size, train=False,
                 prevLstmState=self.prevLstmState, reuse=reuse)
 
-        self.tracked_data = {}
+        self.tracked_data = tracked_data
+        self.lock = lock
 
         self.time = 0
         self.total_forward_count = -1
@@ -127,7 +131,10 @@ class Re3Tracker(object):
             # Use label if it's given
             outputBox = np.array(starting_box)
 
+        self.lock.acquire()
         self.tracked_data[unique_id] = (lstmState, outputBox, image, originalFeatures, forwardCount)
+        self.lock.release()
+
         end_time = time.time()
         if self.total_forward_count > 0:
             self.time += (end_time - start_time - image_read_time)
@@ -167,7 +174,9 @@ class Re3Tracker(object):
                 prevImage = image
                 originalFeatures = None
                 forwardCount = 0
+                self.lock.acquire()
                 self.tracked_data[unique_id] = (lstmState, pastBBox, image, originalFeatures, forwardCount)
+                self.lock.release()
             elif unique_id in self.tracked_data:
                 lstmState, pastBBox, prevImage, originalFeatures, forwardCount = self.tracked_data[unique_id]
             else:
@@ -222,7 +231,9 @@ class Re3Tracker(object):
                 outputBox = np.array(starting_boxes[unique_id])
 
             outputBoxes[uu,:] = outputBox
+            self.lock.acquire()
             self.tracked_data[unique_id] = (lstmState, outputBox, image, originalFeatures, forwardCount)
+            self.lock.release()
         end_time = time.time()
         if self.total_forward_count > 0:
             self.time += (end_time - start_time - image_read_time)
