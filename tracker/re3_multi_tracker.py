@@ -38,7 +38,7 @@ class Re3TrackerFactory(object):
         self.lock = threading.Lock()
 
     def create_tracker(self, gpu_id=0):
-        tracker = Re3Tracker(self.sess, tracked_data=self.tracked_data, lock=lock, reuse=self.is_initialized, gpu_id=gpu_id)
+        tracker = Re3Tracker(self.sess, tracked_data=self.tracked_data, lock=self.lock, reuse=self.is_initialized, gpu_id=gpu_id)
         if not self.is_initialized:
             basedir = os.path.dirname(__file__)
             ckpt = tf.train.get_checkpoint_state(os.path.join(basedir, '..', LOG_DIR, 'checkpoints'))
