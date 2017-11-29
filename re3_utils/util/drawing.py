@@ -33,7 +33,7 @@ def subplot(plots, rows, cols, outputWidth, outputHeight, border=BORDER,
             if im.dtype != np.uint8 or len(im.shape) < 3:
                 im = im.astype(np.float32)
                 im -= np.min(im)
-                im *= 255 / np.max(im)
+                im *= 255 / max(np.max(im), 0.0001)
                 im = 255 - im.astype(np.uint8)
             if len(im.shape) < 3:
                 im = cv2.applyColorMap(
@@ -102,8 +102,8 @@ def subplot(plots, rows, cols, outputWidth, outputHeight, border=BORDER,
                     font=FANCY_FONT)
             im = np.array(im)
         else:
-            cv2.putText(im, titles[0], (10, 30), CV_FONT, 128, [0,0,0], 4)
-            cv2.putText(im, titles[0], (10, 30), CV_FONT, 128, [1,1,1], 1)
+            cv2.putText(im, titles[0], (10, 30), CV_FONT, .5, [0,0,0], 4)
+            cv2.putText(im, titles[0], (10, 30), CV_FONT, .5, [255,255,255], 1)
 
     return im
 

@@ -6,3 +6,5 @@
 logs/
 demo/data/
 labels/
+*.mp4
+*.json

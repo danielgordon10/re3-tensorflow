@@ -20,7 +20,6 @@ from tracker import re3_tracker
 from constants import CROP_PAD
 from constants import CROP_SIZE
 from constants import MAX_TRACK_LENGTH
-from constants import OUTPUT_SIZE
 
 # Display constants
 from constants import OUTPUT_WIDTH
