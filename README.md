@@ -1,6 +1,6 @@
 # Re3
 
-Re3 is a real-time recurrent regression tracker. It offers accuracy and robustness similar to other state-of-the-art trackers while operating at 150 FPS. For more details, contact xkcd@cs.washington.edu. This repository implements the training and testing procedure from https://arxiv.org/pdf/1705.06368.pdf. A sample of the tracker can be found here: https://www.youtube.com/watch?v=PC0txGaYz2I.
+Re3 is a real-time recurrent regression tracker. It offers accuracy and robustness similar to other state-of-the-art trackers while operating at 150 FPS. For more details, contact xkcd@cs.washington.edu. This repository implements the training and testing procedure from https://arxiv.org/pdf/1705.06368.pdf. A sample of the tracker can be found here: https://youtu.be/RByCiOLlxug.
 
 ## Requirements:
 1. Python 2 (don't get me started on Python3 not being backwards compatible).
