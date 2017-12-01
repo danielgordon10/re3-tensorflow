@@ -29,7 +29,7 @@ from re3_utils.tensorflow_util import tf_util
 from re3_utils.tensorflow_util import tf_queue
 from re3_utils.util import drawing
 from re3_utils.util import IOU
-from re3_utils.simulater import simulater
+from re3_utils.simulator import simulator
 
 from constants import CROP_PAD
 from constants import CROP_SIZE
@@ -46,11 +46,11 @@ REPLAY_BUFFER_SIZE = 1024
 PARALLEL_SIZE = 1
 ENQUEUE_BATCH_SIZE = 1
 
-SIMULATION_WIDTH = simulater.IMAGE_WIDTH
-SIMULATION_HEIGHT = simulater.IMAGE_HEIGHT
-simulater.NUM_DISTRACTORS = 20
+SIMULATION_WIDTH = simulator.IMAGE_WIDTH
+SIMULATION_HEIGHT = simulator.IMAGE_HEIGHT
+simulator.NUM_DISTRACTORS = 20
 
-USE_SIMULATER = 0.5
+USE_SIMULATOR = 0.5
 USE_NETWORK_PROB = 0.8
 REAL_MOTION_PROB = 1.0 / 8
 AREA_CUTOFF = 0.25
@@ -133,7 +133,7 @@ def fix_bbox_intersection(bbox, gtBox, imageWidth, imageHeight):
 def main(FLAGS):
     global PORT, delta, REPLAY_BUFFER_SIZE
 
-    simulater.make_paths()
+    simulator.make_paths()
     delta = FLAGS.delta
     batchSize = FLAGS.batch_size
     timing = FLAGS.timing
@@ -274,30 +274,30 @@ def main(FLAGS):
         xywhLabels = np.zeros((delta, 4))
 
         mirrored = random.random() < 0.5
-        useSimulater = random.random() < USE_SIMULATER
+        useSimulator = random.random() < USE_SIMULATOR
         gtType = random.random()
         realMotion = random.random() < REAL_MOTION_PROB
 
         # Initialize first frame (give the network context).
 
-        if useSimulater:
+        if useSimulator:
             # Initialize the simulation and run through a few frames.
-            trackingObj, trackedObjects, background = simulater.create_new_track()
+            trackingObj, trackedObjects, background = simulator.create_new_track()
             for _ in xrange(random.randint(0,200)):
-                simulater.step(trackedObjects)
+                simulator.step(trackedObjects)
                 bbox = trackingObj.get_object_box()
-                occlusion = simulater.measure_occlusion(bbox, trackingObj.occluder_boxes, cropPad=1)
+                occlusion = simulator.measure_occlusion(bbox, trackingObj.occluder_boxes, cropPad=1)
                 if occlusion > .2:
                     break
             for _ in xrange(1000):
                 bbox = trackingObj.get_object_box()
-                occlusion = simulater.measure_occlusion(bbox, trackingObj.occluder_boxes, cropPad=1)
+                occlusion = simulator.measure_occlusion(bbox, trackingObj.occluder_boxes, cropPad=1)
                 if occlusion < 0.01:
                     break
-                simulater.step(trackedObjects)
+                simulator.step(trackedObjects)
             initBox = trackingObj.get_object_box()
             if debug:
-                images = [simulater.get_image_for_frame(trackedObjects, background)]
+                images = [simulator.get_image_for_frame(trackedObjects, background)]
             else:
                 images = [np.zeros((SIMULATION_HEIGHT, SIMULATION_WIDTH))]
 
@@ -318,7 +318,7 @@ def main(FLAGS):
 
         for dd in xrange(delta):
             # bboxOn is the gt location in image1
-            if useSimulater:
+            if useSimulator:
                 bboxOn = trackingObj.get_object_box()
             else:
                 newKey = list(gtKey)
@@ -328,27 +328,27 @@ def main(FLAGS):
                 bboxOn = datasets[newKey[0]][imageIndex, :4].copy()
             if dd == 0:
                 noisyBox = bboxOn.copy()
-            elif not realMotion and not useSimulater and gtType >= USE_NETWORK_PROB:
+            elif not realMotion and not useSimulator and gtType >= USE_NETWORK_PROB:
                 noisyBox = add_noise(bboxOn, bboxOn, images[0].shape[1], images[0].shape[0])
             else:
                 noisyBox = fix_bbox_intersection(bboxPrev, bboxOn, images[0].shape[1], images[0].shape[0])
 
-            if useSimulater:
-                patch = simulater.render_patch(bboxPrev, background, trackedObjects)
+            if useSimulator:
+                patch = simulator.render_patch(bboxPrev, background, trackedObjects)
                 tImage[dd,0,...] = patch
                 if dd > 0:
-                    simulater.step(trackedObjects)
+                    simulator.step(trackedObjects)
                     bboxOn = trackingObj.get_object_box()
                     noisyBox = fix_bbox_intersection(bboxPrev, bboxOn, images[0].shape[1], images[0].shape[0])
             else:
                 tImage[dd,0,...] = im_util.get_cropped_input(
                         images[max(dd-1, 0)], bboxPrev, CROP_PAD, CROP_SIZE)[0]
 
-            if useSimulater:
-                patch = simulater.render_patch(noisyBox, background, trackedObjects)
+            if useSimulator:
+                patch = simulator.render_patch(noisyBox, background, trackedObjects)
                 tImage[dd,1,...] = patch
                 if debug:
-                    images.append(simulater.get_image_for_frame(trackedObjects, background))
+                    images.append(simulator.get_image_for_frame(trackedObjects, background))
             else:
                 tImage[dd,1,...] = im_util.get_cropped_input(
                         images[dd], noisyBox, CROP_PAD, CROP_SIZE)[0]
