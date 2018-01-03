@@ -2,6 +2,10 @@
 
 Re3 is a real-time recurrent regression tracker. It offers accuracy and robustness similar to other state-of-the-art trackers while operating at 150 FPS. For more details, contact xkcd@cs.washington.edu. This repository implements the training and testing procedure from https://arxiv.org/pdf/1705.06368.pdf. A sample of the tracker can be found here: https://youtu.be/RByCiOLlxug.
 
+## Model:
+The model weights we used in our paper were ported from Caffe to Tensorflow. Because they deal with padding differently, results are slightly different, but the model still works well.
+To use it, download it [here](https://goo.gl/NWGXGM), extract the tar, and place in your log directory (mine is "logs").
+
 ## Requirements:
 1. Python 2 (don't get me started on Python3 not being backwards compatible).
 2. [Tensorflow](https://www.tensorflow.org/) and its requirements. I use the pip tensorflow-gpu==1.2.0
@@ -17,6 +21,7 @@ cd re3-tensorflow
 sudo apt-get install python-virtualenv
 virtualenv venv --system-site-packages
 source venv/bin/activate
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 ### Enter the virtualenv in a later session to use the installed libraries.
@@ -27,10 +32,6 @@ source venv/bin/activate
 ```bash
 deactivate
 ```
-
-## Model:
-The model weights we used in our paper were ported from Caffe to Tensorflow. Because they deal with padding differently, results are slightly different, but the model still works well.
-To use it, download it [here](https://goo.gl/NWGXGM), extract the tar, and place in your log directory (mine is "logs").
 
 ## Folders and Files:
 ### Most important for using Re3 in a new project:
