@@ -44,6 +44,11 @@ class Re3Tracker(object):
         config.gpu_options.allow_growth = True
         self.sess = tf.Session(config=config)
         ckpt = tf.train.get_checkpoint_state(os.path.join(basedir, '..', LOG_DIR, 'checkpoints'))
+        if ckpt is None:
+            raise IOError(
+                    ('Checkpoint model could not be found. '
+                    'Did you download the pretrained weights? '
+                    'Download them here: https://goo.gl/NWGXGM and read the Model section of the Readme.'))
         tf_util.restore(self.sess, ckpt.model_checkpoint_path)
 
         self.tracked_data = {}
