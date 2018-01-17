@@ -50,7 +50,7 @@ def runFrame(imOn, gtOn):
         gt[gtOn, 4] == gt[gtOn - 1, 4] and
         gt[gtOn, 5] == gt[gtOn - 1, 5] and
         gt[gtOn, 6] - 1 == gt[gtOn - 1, 6])):
-        print 'beginning sequence', gt[gtOn, [5, 6]]
+        print('beginning sequence', gt[gtOn, [5, 6]])
         # Clear the state if a new sequence has started.
         initialize = True
         ignoreFrames = 0
@@ -155,7 +155,7 @@ if __name__ == '__main__':
 
     tracker = re3_tracker.Re3Tracker(FLAGS.cuda_visible_devices)
 
-    print 'Testing', numImages, 'frames'
+    print('Testing', numImages, 'frames')
 
     # Set up global data holders
     imOn = FLAGS.skipCount
@@ -178,7 +178,7 @@ if __name__ == '__main__':
         cv2.namedWindow('Output')
 
     maxIter =  min(FLAGS.maxCount + FLAGS.skipCount, numImages)
-    for imOn in xrange(FLAGS.skipCount, maxIter):
+    for imOn in range(FLAGS.skipCount, maxIter):
         if DISPLAY:
             plots, titles, results = runFrame(imageNums[int(imOn)], int(imOn))
             im = subplot(plots, NUM_ROWS, NUM_COLS, titles=titles,
@@ -188,12 +188,12 @@ if __name__ == '__main__':
             waitKey = cv2.waitKey(1)
             if FLAGS.record:
                 if imOn % 100 == 0:
-                    print imOn
+                    print(imOn)
                 writer.append_data(im[:,:,::-1])
         else:
             results = runFrame(imageNums[int(imOn)], int(imOn))
         if imOn % 100 == 0 or (imOn + 1) == maxIter:
-            print 'Results: ' + str([key + ' : ' + str(results[key]) for key in sorted(results.keys())])
+            print('Results: ' + str([key + ' : ' + str(results[key]) for key in sorted(results.keys())]))
 
     if FLAGS.record:
         writer.close()

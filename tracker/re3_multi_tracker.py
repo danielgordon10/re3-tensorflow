@@ -57,7 +57,7 @@ class Re3Tracker(object):
         self.sess = sess
 
         self.imagePlaceholder = tf.placeholder(tf.uint8, shape=(None, CROP_SIZE, CROP_SIZE, 3))
-        self.prevLstmState = tuple([tf.placeholder(tf.float32, shape=(None, LSTM_SIZE)) for _ in xrange(4)])
+        self.prevLstmState = tuple([tf.placeholder(tf.float32, shape=(None, LSTM_SIZE)) for _ in range(4)])
         self.batch_size = tf.placeholder(tf.int32, shape=())
 
         self.outputs, self.state1, self.state2 = network.inference(
@@ -85,7 +85,7 @@ class Re3Tracker(object):
         image_read_time = time.time() - start_time
 
         if starting_box is not None:
-            lstmState = [np.zeros((1, LSTM_SIZE)) for _ in xrange(4)]
+            lstmState = [np.zeros((1, LSTM_SIZE)) for _ in range(4)]
             pastBBox = np.array(starting_box) # turns list into numpy array if not and copies for safety.
             prevImage = image
             originalFeatures = None
@@ -139,9 +139,9 @@ class Re3Tracker(object):
         if self.total_forward_count > 0:
             self.time += (end_time - start_time - image_read_time)
         if SPEED_OUTPUT and self.total_forward_count % 100 == 0:
-            print 'Current tracking speed:   %.3f FPS' % (1 / (end_time - start_time - image_read_time))
-            print 'Current image read speed: %.3f FPS' % (1 / (image_read_time))
-            print 'Mean tracking speed:      %.3f FPS\n' % (self.total_forward_count / max(.00001, self.time))
+            print('Current tracking speed:   %.3f FPS' % (1 / (end_time - start_time - image_read_time)))
+            print('Current image read speed: %.3f FPS' % (1 / (image_read_time)))
+            print('Mean tracking speed:      %.3f FPS\n' % (self.total_forward_count / max(.00001, self.time)))
         return outputBox
 
 
@@ -163,13 +163,13 @@ class Re3Tracker(object):
 
         # Get inputs for each track.
         images = []
-        lstmStates = [[] for _ in xrange(4)]
+        lstmStates = [[] for _ in range(4)]
         pastBBoxesPadded = []
         if starting_boxes is None:
             starting_boxes = dict()
         for unique_id in unique_ids:
             if unique_id in starting_boxes:
-                lstmState = [np.zeros((1, LSTM_SIZE)) for _ in xrange(4)]
+                lstmState = [np.zeros((1, LSTM_SIZE)) for _ in range(4)]
                 pastBBox = np.array(starting_boxes[unique_id]) # turns list into numpy array if not and copies for safety.
                 prevImage = image
                 originalFeatures = None
@@ -238,10 +238,10 @@ class Re3Tracker(object):
         if self.total_forward_count > 0:
             self.time += (end_time - start_time - image_read_time)
         if SPEED_OUTPUT and self.total_forward_count % 100 == 0:
-            print 'Current tracking speed per object: %.3f FPS' % (len(unique_ids) / (end_time - start_time - image_read_time))
-            print 'Current tracking speed per frame:  %.3f FPS' % (1 / (end_time - start_time - image_read_time))
-            print 'Current image read speed:          %.3f FPS' % (1 / (image_read_time))
-            print 'Mean tracking speed per object:    %.3f FPS\n' % (self.total_forward_count / max(.00001, self.time))
+            print('Current tracking speed per object: %.3f FPS' % (len(unique_ids) / (end_time - start_time - image_read_time)))
+            print('Current tracking speed per frame:  %.3f FPS' % (1 / (end_time - start_time - image_read_time)))
+            print('Current image read speed:          %.3f FPS' % (1 / (image_read_time)))
+            print('Mean tracking speed per object:    %.3f FPS\n' % (self.total_forward_count / max(.00001, self.time)))
         return outputBoxes
 
 

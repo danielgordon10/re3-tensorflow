@@ -4,7 +4,6 @@ import numpy as np
 import random
 import time
 
-import TrackedObject
 
 import sys
 import os
@@ -16,6 +15,7 @@ sys.path.append(os.path.abspath(os.path.join(
 
 from re3_utils.util.bb_util import *
 from re3_utils.util.IOU import *
+from re3_utils.simulator import TrackedObject
 from constants import CROP_SIZE
 from constants import CROP_PAD
 
@@ -108,11 +108,11 @@ def get_distractor_crop(inputImage, bbox):
     minIntersection = 1
     minIntersectionRect = np.zeros(4)
     bboxArea = bboxOnXYWH[2] * bboxOnXYWH[3]
-    for _ in xrange(10000):
+    for _ in range(10000):
         randW = np.random.randint(10, inputImage.shape[1] * .5)
         randH = np.random.randint(10, inputImage.shape[0] * .5)
-        randX = np.random.randint(randW / 2, inputImage.shape[1] - randW / 2)
-        randY = np.random.randint(randH / 2, inputImage.shape[0] - randH / 2)
+        randX = np.random.randint(int(randW / 2), int(inputImage.shape[1] - randW / 2))
+        randY = np.random.randint(int(randH / 2), int(inputImage.shape[0] - randH / 2))
         randRect = xywh_to_xyxy([randX, randY, randW, randH], round=True)
         iou = intersection(randRect, bbox) / bboxArea
         if iou < MAX_NEG_IOU_THRESH:
@@ -144,7 +144,7 @@ def create_new_track():
     distractorImage = image
     fakeBox = np.array([1,1,2,2])
 
-    for dd in xrange(NUM_DISTRACTORS / 2):
+    for dd in range(int(NUM_DISTRACTORS / 2)):
         distractorPatch, distractorRect = get_distractor_crop(distractorImage, fakeBox)
         distractorObj = TrackedObject.TrackedObject(IMAGE_WIDTH, IMAGE_HEIGHT,
                 distractorPatch, distractorRect, maxDistractorSize)
@@ -152,7 +152,7 @@ def create_new_track():
 
     trackObjects.append(newObj)
 
-    for dd in xrange((NUM_DISTRACTORS + 1) / 2):
+    for dd in range(int((NUM_DISTRACTORS + 1) / 2)):
         distractorPatch, distractorRect = get_distractor_crop(distractorImage, fakeBox)
         distractorObj = TrackedObject.TrackedObject(IMAGE_WIDTH, IMAGE_HEIGHT,
                 distractorPatch, distractorRect, maxDistractorSize)
@@ -270,7 +270,7 @@ def render_patch(bbox, background, trackedObjects, cropSize=CROP_SIZE, cropPad=C
             featherCrop[3] = int(min((fullBBox[3] - boxPos[1]) * 1.0 / boxPosXYWH[3], 1) * FEATHER_WEIGHT_ARRAY.shape[0])
             if (featherCrop[2] - featherCrop[0] < 1 or
                     featherCrop[3] - featherCrop[1] < 1):
-                featherCrop = [CROP_SIZE / 2 - 1, CROP_SIZE / 2 - 1, CROP_SIZE / 2, CROP_SIZE / 2]
+                featherCrop = [int(CROP_SIZE / 2 - 1), int(CROP_SIZE / 2 - 1), int(CROP_SIZE / 2), int(CROP_SIZE / 2)]
             featherCrop = np.round(featherCrop).astype(int)
             featherCrop[[0,2]] = np.clip(featherCrop[[0,2]], 0, FEATHER_WEIGHT_ARRAY.shape[1])
             featherCrop[[1,3]] = np.clip(featherCrop[[1,3]], 0, FEATHER_WEIGHT_ARRAY.shape[0])
@@ -334,7 +334,7 @@ def get_image_sequence(seqLen, imCount=0, writeFull=False):
 
     prevLoc = trackingObj.get_object_box()
 
-    for i in xrange(seqLen):
+    for i in range(seqLen):
         newLocShifted = get_shifted_box_coords(trackingObj.get_object_box(), prevLoc)
 
         renderPatch = render_patch(prevLoc, background, trackedObjects)
@@ -346,7 +346,7 @@ def get_image_sequence(seqLen, imCount=0, writeFull=False):
             newImage = get_image_for_frame(trackedObjects, background)
             cv2.imwrite('images_full/%07d.png' % seqInd, newImage[:,:,::-1])
             seqInd += 1
-        trackedObjects = step(trackedObjects)
+        step(trackedObjects)
     return sequence
 
 
@@ -363,7 +363,7 @@ if __name__ == '__main__':
     times = []
     imCount = 0
 
-    for xx in xrange(NUM_SEQUENCES):
+    for xx in range(NUM_SEQUENCES):
         startTime = time.time()
         sequence = get_image_sequence(SEQUENCE_LENGTH, imCount, True)
         times.append((time.time() - startTime) / SEQUENCE_LENGTH)
@@ -371,5 +371,5 @@ if __name__ == '__main__':
             imCount += 1
             drawing.drawRect(image, bbox, 1, [255,0,0])
             cv2.imwrite('images/%07d.png' % imCount, image[:,:,::-1])
-        print 'average time per frame %.5f' % np.mean(times)
+        print('average time per frame %.5f' % np.mean(times))
 

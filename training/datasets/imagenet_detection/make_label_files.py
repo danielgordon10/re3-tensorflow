@@ -35,7 +35,7 @@ def main(label_type):
     bboxes = []
     for ii,imageName in enumerate(images):
         if ii % 100 == 0:
-            print 'iter %d of %d = %.2f%%' % (ii, len(images), ii * 1.0 / len(images) * 100)
+            print('iter %d of %d = %.2f%%' % (ii, len(images), ii * 1.0 / len(images) * 100))
         if not DEBUG:
             imageNameFile.write(imageName + '\n')
         imOn = ii
@@ -44,12 +44,12 @@ def main(label_type):
         imgSize = get_image_size(images[imOn])
         area_cutoff = imgSize[0] * imgSize[1] * 0.01
         if DEBUG:
-            print '\nimage name\n\n%s\n' % images[imOn]
+            print('\nimage name\n\n%s\n' % images[imOn])
             image = cv2.imread(images[imOn])
-            print 'image size', image.shape
-            print label
-            print labelTree
-            print labelTree.findall('object')
+            print('image size', image.shape)
+            print(label)
+            print(labelTree)
+            print(labelTree.findall('object'))
         for obj in labelTree.findall('object'):
             bbox = obj.find('bndbox')
             bbox = [int(bbox.find('xmin').text),
@@ -60,8 +60,8 @@ def main(label_type):
             if (bbox[3] - bbox[1]) * (bbox[2] - bbox[0]) < area_cutoff:
                 continue
             if DEBUG:
-                print 'name', obj.find('name').text, '\n'
-                print bbox
+                print('name', obj.find('name').text, '\n')
+                print(bbox)
                 image = image.squeeze()
                 if len(image.shape) < 3:
                     image = np.tile(image[:,:,np.newaxis], (1,1,3))

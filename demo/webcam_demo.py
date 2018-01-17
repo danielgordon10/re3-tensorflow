@@ -57,7 +57,7 @@ def show_webcam(mirror=False):
     outputDir = None
     outputBoxToDraw = None
     if RECORD:
-        print 'saving'
+        print('saving')
         if not os.path.exists('outputs'):
             os.mkdir('outputs')
         tt = time.localtime()
@@ -94,7 +94,7 @@ def show_webcam(mirror=False):
                         (frameNum, outputBoxToDraw[0], outputBoxToDraw[1],
                             outputBoxToDraw[2], outputBoxToDraw[3]))
             cv2.imwrite('%s%08d.jpg' % (outputDir, frameNum), origImg)
-            print 'saving'
+            print('saving')
         keyPressed = cv2.waitKey(1)
         if keyPressed == 27 or keyPressed == 1048603:
             break  # esc to quit

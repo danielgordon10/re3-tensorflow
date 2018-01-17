@@ -21,7 +21,7 @@ image_paths = sorted(glob.glob(os.path.join(
 initial_bbox = [190, 158, 249, 215]
 # Provide a unique id, an image/path, and a bounding box.
 tracker.track('ball', image_paths[0], initial_bbox)
-print 'ball track started'
+print('ball track started')
 for ii,image_path in enumerate(image_paths):
     image = cv2.imread(image_path)
     # Tracker expects RGB, but opencv loads BGR.
@@ -38,7 +38,7 @@ for ii,image_path in enumerate(image_paths):
     elif ii == 100:
         # Start a new track, but continue the first as well. Only the new track needs an initial bounding box.
         bboxes = tracker.multi_track(['ball', 'logo'], imageRGB, {'logo' : [399, 20, 428, 45]})
-        print 'logo track started'
+        print('logo track started')
     else:
         # Both tracks are started, neither needs bounding boxes.
         bboxes = tracker.multi_track(['ball', 'logo'], imageRGB)

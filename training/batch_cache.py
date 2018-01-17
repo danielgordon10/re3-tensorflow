@@ -1,15 +1,21 @@
 import argparse
 import cv2
-import cPickle
 import glob
 import numpy as np
 import random
-import SocketServer
 import struct
 import sys
 import threading
 import time
 import get_datasets
+
+try:
+    import cPickle as pickle
+    import SocketServer
+except ImportError:
+    # Python 3 compatibility
+    import pickle
+    import socketserver as SocketServer
 
 HOST = 'localhost'
 
@@ -20,15 +26,15 @@ class BatchCacheHandler(SocketServer.BaseRequestHandler, object):
         # Serves until disconnect.
         while not self.server.shut_down:
             alive = self.request.recv(1024).strip()
-            print alive
+            print(alive)
             if len(alive) == 0:
                 break
             (key, val) = self.server.get_sample(self.server.batch_cache)
-            print 'key', key
+            print('key', key)
             self.server.lock.acquire()
             try:
                 # Send the key.
-                keyPickle = cPickle.dumps(key)
+                keyPickle = pickle.dumps(key)
                 messageLength = struct.pack('>I', len(keyPickle))
                 self.request.sendall(messageLength)
                 self.request.sendall(keyPickle)
@@ -76,7 +82,7 @@ class BatchCacheServer:
         self.all_keys = set()
         self.create_keys()
         #Load the first few samples.
-        for i in range(min(self.max_size / 2, 32)):
+        for i in range(min(int(self.max_size / 2), 32)):
             self.__random_load(force_append=True)
 
     def __del__(self):
@@ -85,7 +91,7 @@ class BatchCacheServer:
 
     def __memory_monitor(self):
         while self.keep_alive:
-            if np.sum(self.data_hits) > 0:
+            if self.data_hits is not None and np.sum(self.data_hits) > 0:
                 self.__random_load()
             time.sleep(0.0001)
 
@@ -101,7 +107,7 @@ class BatchCacheServer:
             self.data_lock.acquire()
             if len(self.keys) < self.max_size or force_append: # Append
                 if self.debug:
-                    print 'Appending new data. Num keys =', len(self.keys)
+                    print('Appending new data. Num keys =', len(self.keys))
                 self.vals.append(val)
                 self.keys.append(key)
                 if self.data_hits is None:
@@ -121,20 +127,20 @@ class BatchCacheServer:
                 total_hits = np.sum(self.data_hits)
                 i = np.argmax(self.data_hits)
                 if self.debug:
-                    print 'Replacing data. Replacing spot', i
+                    print('Replacing data. Replacing spot', i)
                 del self.idxs[self.keys[i]]
                 self.vals[i] = val
                 self.keys[i] = key
                 self.data_hits[i] = 0
                 self.idxs[key] = i
             if self.debug:
-                print 'Total used elements:', len(self.data_hits[self.data_hits > 0])
-                print self.data_hits[self.data_hits > 0]
+                print('Total used elements:', len(self.data_hits[self.data_hits > 0]))
+                print(self.data_hits[self.data_hits > 0])
             self.data_lock.release()
         except Exception as ex:
             import traceback
             trace = traceback.format_exc()
-            print trace
+            print(trace)
             self.shut_down = True
             self.data_lock.release()
             errorFile = open('error.txt', 'a+')
@@ -146,7 +152,7 @@ class BatchCacheServer:
         data = get_datasets.get_data_for_dataset(dataset_name, 'train')
         gt = data['gt']
         num_keys = 0
-        for xx in xrange(gt.shape[0] - self.num_unrolls):
+        for xx in range(gt.shape[0] - self.num_unrolls):
             start_line = gt[xx,:].astype(int)
             end_line = gt[xx + self.num_unrolls,:].astype(int)
             # Check that still in the same sequence.
@@ -158,7 +164,7 @@ class BatchCacheServer:
                 self.all_keys.add((dataset_ind, start_line[4], start_line[5], start_line[6]))
                 num_keys += 1
         if self.debug:
-            print '#%s keys: %d' % (dataset_name, num_keys)
+            print('#%s keys: %d' % (dataset_name, num_keys))
 
         image_paths = data['image_paths']
         # Add the array to image_paths. Note that image paths is indexed by the dataset number THEN by the image line.
@@ -175,17 +181,17 @@ class BatchCacheServer:
             ind = key[-1]
             if self.debug:
                 imageName = self.image_paths[key[0]][ind]
-                print 'Reading image', imageName
-            for dd in xrange(self.num_unrolls):
+                print('Reading image', imageName)
+            for dd in range(self.num_unrolls):
                 path = self.image_paths[key[0]][ind + dd]
                 image = cv2.imread(path)[:,:,::-1]
-                shape = cPickle.dumps(image.shape)
+                shape = pickle.dumps(image.shape)
                 string = image.tostring()
                 images.append((string, shape))
         except Exception as ex:
             import traceback
             trace = traceback.format_exc()
-            print trace
+            print(trace)
             errorFile = open('error.txt', 'a+')
             errorFile.write('exception in lookup_func %s\n' % str(ex))
             errorFile.write(str(trace))
@@ -204,7 +210,7 @@ class BatchCacheServer:
         except Exception as ex:
             import traceback
             trace = traceback.format_exc()
-            print trace
+            print(trace)
             errorFile = open('error.txt', 'a+')
             errorFile.write('exception in lookup_func %s\n' % str(ex))
             errorFile.write(str(trace))
@@ -216,7 +222,7 @@ class BatchCacheServer:
 
     def serve(self, port):
         if self.debug:
-            print 'Server starting up'
+            print('Server starting up')
         handler = SocketServer.TCPServer((HOST, port), BatchCacheHandler)
         handler.get_sample = self.get_sample
         handler.batch_cache = self

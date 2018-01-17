@@ -1,6 +1,5 @@
 import pdb
 import argparse
-import cPickle
 import cv2
 import glob
 import numpy as np
@@ -13,6 +12,11 @@ import tensorflow as tf
 import time
 import threading
 
+try:
+    import cPickle as pickle
+except ImportError:
+    # Python 3 compatibility
+    import pickle
 
 from io import BytesIO
 
@@ -59,14 +63,14 @@ AREA_CUTOFF = 0.25
 def getData():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((HOST, PORT))
-    sock.sendall('Ready' + '\n')
+    sock.sendall(('Ready' + '\n').encode())
     receivedBytes = sock.recv(4)
     messageLength = struct.unpack('>I', receivedBytes)[0]
     key = sock.recv(messageLength)
-    key = cPickle.loads(key)
+    key = pickle.loads(key)
 
     images = [None] * delta
-    for nn in xrange(delta):
+    for nn in range(delta):
         image = BytesIO()
         # Connect to server and send data.
 
@@ -86,7 +90,7 @@ def getData():
         receivedBytes = sock.recv(4)
         messageLength = struct.unpack('>I', receivedBytes)[0]
         shape = sock.recv(messageLength)
-        shape = cPickle.loads(shape)
+        shape = pickle.loads(shape)
         imageArray = imageArray.reshape(shape)
         if len(imageArray.shape) < 3:
             imageArray = np.tile(imageArray[:,:,np.newaxis], (1,1,3))
@@ -152,7 +156,7 @@ def main(FLAGS):
     def add_dataset(dataset_name):
         dataset_ind = len(datasets)
         dataset_gt = get_datasets.get_data_for_dataset(dataset_name, 'train')['gt']
-        for xx in xrange(dataset_gt.shape[0]):
+        for xx in range(dataset_gt.shape[0]):
             line = dataset_gt[xx,:].astype(int)
             key_lookup[(dataset_ind, line[4], line[5], line[6])] = xx
         datasets.append(dataset_gt)
@@ -211,15 +215,15 @@ def main(FLAGS):
     if ',' in FLAGS.cuda_visible_devices:
         with tf.device('/gpu:1'):
             forwardNetworkImagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
-            prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in xrange(4)])
-            initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in xrange(4)])
+            prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in range(4)])
+            initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in range(4)])
             networkOutputs, state1, state2 = network.inference(
                     forwardNetworkImagePlaceholder, num_unrolls=1, train=False,
                     prevLstmState=prevLstmState, reuse=True)
     else:
         forwardNetworkImagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
-        prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in xrange(4)])
-        initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in xrange(4)])
+        prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in range(4)])
+        initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in range(4)])
         networkOutputs, state1, state2 = network.inference(
                 forwardNetworkImagePlaceholder, num_unrolls=1, train=False,
                 prevLstmState=prevLstmState, reuse=True)
@@ -228,12 +232,12 @@ def main(FLAGS):
     sess.run(init)
     startIter = 0
     if FLAGS.restore:
-        print 'Restoring'
+        print('Restoring')
         ckpt = tf.train.get_checkpoint_state(LOG_DIR + '/checkpoints')
         if ckpt and ckpt.model_checkpoint_path:
             tf_util.restore(sess, ckpt.model_checkpoint_path)
             startIter = int(ckpt.model_checkpoint_path.split('-')[-1])
-            print 'Restored', startIter
+            print('Restored', startIter)
     if not debug:
         tt = time.localtime()
         time_str = ('%04d_%02d_%02d_%02d_%02d_%02d' %
@@ -283,13 +287,13 @@ def main(FLAGS):
         if useSimulator:
             # Initialize the simulation and run through a few frames.
             trackingObj, trackedObjects, background = simulator.create_new_track()
-            for _ in xrange(random.randint(0,200)):
+            for _ in range(random.randint(0,200)):
                 simulator.step(trackedObjects)
                 bbox = trackingObj.get_object_box()
                 occlusion = simulator.measure_occlusion(bbox, trackingObj.occluder_boxes, cropPad=1)
                 if occlusion > .2:
                     break
-            for _ in xrange(1000):
+            for _ in range(1000):
                 bbox = trackingObj.get_object_box()
                 occlusion = simulator.measure_occlusion(bbox, trackingObj.occluder_boxes, cropPad=1)
                 if occlusion < 0.01:
@@ -316,7 +320,7 @@ def main(FLAGS):
         bboxPrev = initBox
         lstmState = None
 
-        for dd in xrange(delta):
+        for dd in range(delta):
             # bboxOn is the gt location in image1
             if useSimulator:
                 bboxOn = trackingObj.get_object_box()
@@ -387,7 +391,7 @@ def main(FLAGS):
                 image1 = tImage[dd,1,...].copy()
 
                 xyxyLabel = bb_util.xywh_to_xyxy(xywhLabels[dd,:].squeeze())
-                print 'xyxy raw', xyxyLabel, 'actual', xyxyLabel * CROP_PAD
+                print('xyxy raw', xyxyLabel, 'actual', xyxyLabel * CROP_PAD)
                 label = np.zeros((CROP_PAD, CROP_PAD))
                 drawing.drawRect(label,  xyxyLabel * CROP_PAD, 0, 1)
                 drawing.drawRect(image0, bb_util.xywh_to_xyxy(np.full((4,1), .5) * CROP_SIZE), 2, [255,0,0])
@@ -396,8 +400,8 @@ def main(FLAGS):
                 if dd < len(cropBBoxes):
                     drawing.drawRect(bigImage1, bboxes[dd], 5, [255,0,0])
                     drawing.drawRect(image1, cropBBoxes[dd] * CROP_SIZE, 1, [0,255,0])
-                    print 'pred raw', cropBBoxes[dd], 'actual', cropBBoxes[dd] * CROP_PAD
-                print '\n'
+                    print('pred raw', cropBBoxes[dd], 'actual', cropBBoxes[dd] * CROP_PAD)
+                print('\n')
 
                 label[0,0] = 1
                 label[0,1] = 0
@@ -423,7 +427,7 @@ def main(FLAGS):
 
     if FLAGS.debug:
         new_data = get_data_sequence()
-        for _ in xrange(10):
+        for _ in range(10):
             queue.enqueue(new_data)
     else:
         # Start some data loading threads.
@@ -467,14 +471,14 @@ def main(FLAGS):
 
             timeTotal += (endSolver - startSolver)
             if timing and (iteration - 1) % 10 == 0:
-                print 'Iteration:       %d' % (iteration - 1)
-                print 'Queue Size:      %d' % queue.size.eval(session=sess)
-                print 'Loss:            %.3f' % lossValue
-                print 'Average Time:    %.3f' % (timeTotal / numIters)
-                print 'Current Time:    %.3f' % (endSolver - startSolver)
+                print('Iteration:       %d' % (iteration - 1))
+                print('Queue Size:      %d' % queue.size.eval(session=sess))
+                print('Loss:            %.3f' % lossValue)
+                print('Average Time:    %.3f' % (timeTotal / numIters))
+                print('Current Time:    %.3f' % (endSolver - startSolver))
                 if numIters > 20:
-                    print 'Current Average: %.3f' % ((time.time() - currentTimeStart) / 10)
-                print ''
+                    print('Current Average: %.3f' % ((time.time() - currentTimeStart) / 10))
+                print('')
 
             # Save a checkpoint and remove old ones.
             if iteration % 500 == 0 or iteration == FLAGS.max_steps:
@@ -499,7 +503,7 @@ def main(FLAGS):
                     # Write out the full graph sometimes.
                     if (numIters == 1 or
                         iteration == FLAGS.max_steps):
-                        print 'Running detailed summary'
+                        print('Running detailed summary')
                         run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                         run_metadata = tf.RunMetadata()
                         _, summary_str = sess.run([train_op, summary_with_images],
@@ -510,9 +514,9 @@ def main(FLAGS):
                     elif iteration % 1000 == 0:
                         _, summary_str = sess.run([train_op, summary_with_images],
                             feed_dict={learningRate : 1e-5 if iteration < 10000 else 1e-6})
-                        print 'Running image summary'
+                        print('Running image summary')
                     else:
-                        print 'Running summary'
+                        print('Running summary')
                         _, summary_str = sess.run([train_op, summary_full],
                             feed_dict={learningRate : 1e-5 if iteration < 10000 else 1e-6})
                     summary_writer.add_summary(summary_str, iteration)
@@ -521,7 +525,7 @@ def main(FLAGS):
                     # Run a validation set eval in a separate process.
                     def test_func():
                         test_iter_on = iteration
-                        print 'Staring test iter', test_iter_on
+                        print('Staring test iter', test_iter_on)
                         import subprocess
                         import json
                         command = ['python', 'test_net.py', '--video_sample_rate', str(10), '--no-display', '-v', str(FLAGS.val_device)]
@@ -535,21 +539,21 @@ def main(FLAGS):
                             })
                         summary_writer.add_summary(summary_str, test_iter_on)
                         os.remove('results.json')
-                        print 'Ending test iter', test_iter_on
+                        print('Ending test iter', test_iter_on)
                     test_thread = threading.Thread(target=test_func)
                     test_thread.daemon = True
                     test_thread.start()
             if FLAGS.output:
                 # Look at some of the outputs.
-                print 'new batch'
+                print('new batch')
                 queue.lock.acquire()
                 images = debug_feed_dict[imagePlaceholder].astype(np.uint8).reshape(
                         (batchSize, delta, 2, CROP_SIZE, CROP_SIZE, 3))
                 labels = debug_feed_dict[labelPlaceholder].reshape(
                         (batchSize, delta, 4))
                 outputs = outputs.reshape((batchSize, delta, 4))
-                for bb in xrange(batchSize):
-                    for dd in xrange(delta):
+                for bb in range(batchSize):
+                    for dd in range(delta):
                         image0 = images[bb,dd,0,...]
                         image1 = images[bb,dd,1,...]
 
@@ -573,7 +577,7 @@ def main(FLAGS):
     except:
         # Save if error or killed by ctrl-c.
         if not debug:
-            print 'Saving...'
+            print('Saving...')
             checkpoint_file = os.path.join(LOG_DIR, 'checkpoints', 'model.ckpt')
             saver.save(sess, checkpoint_file, global_step=iteration)
         raise

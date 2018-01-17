@@ -9,7 +9,7 @@ The model weights we used in our paper were ported from Caffe to Tensorflow. Bec
 To use it, download it [here](https://goo.gl/NWGXGM), extract the tar, and place in your log directory (mine is "logs").
 
 ## Requirements:
-1. Python 2 (don't get me started on Python3 not being backwards compatible).
+1. Python 2.7+ or 3.5+.
 2. [Tensorflow](https://www.tensorflow.org/) and its requirements. I use the pip tensorflow-gpu==1.2.0
 3. [NumPy](http://www.numpy.org/). The pip should work.
 4. [OpenCV 2](http://opencv.org/opencv-2-4-8.html). The opencv-python pip should work.

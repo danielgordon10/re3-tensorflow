@@ -92,7 +92,7 @@ def inference(inputs, num_unrolls, train, batch_size=None, prevLstmState=None, r
     # Data should be in order BxTx2xHxWxC where T is the number of unrolls
     # Mean subtraction
     if batch_size is None:
-        batch_size = inputs.get_shape().as_list()[0] / (num_unrolls * 2)
+        batch_size = int(inputs.get_shape().as_list()[0] / (num_unrolls * 2))
 
     variable_list = []
 

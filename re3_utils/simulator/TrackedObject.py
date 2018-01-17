@@ -79,7 +79,7 @@ class TrackedObject(object):
         self.bbox_init()
 
     def bbox_init(self):
-        for xx in xrange(100):
+        for xx in range(100):
             # Try 100 times to get something that doesn't immediately occlude
             # other things.
             self.position = np.zeros(2)

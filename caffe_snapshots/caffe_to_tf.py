@@ -63,7 +63,7 @@ with sess.as_default():
     ]
 
     tfVars = {var.name : var for var in tf.global_variables()}
-    print '\n'.join(sorted([key for key in sorted(tfVars.keys()) if 'conv1' in key])) + '\n'
+    print('\n'.join(sorted([key for key in sorted(tfVars.keys()) if 'conv1' in key])) + '\n')
     for copy_param in copy_params:
         caffe_param = copy_param[0]
         # Weights
@@ -84,42 +84,42 @@ with sess.as_default():
         if 'conv' in copy_param[0]:
             tfVar = tfVars[tf_param + '/W_conv:0']
             ops.append(tfVar.assign(caffe_data))
-            print 'copied ', caffe_param, 'weights to', tf_param
+            print('copied ', caffe_param, 'weights to', tf_param)
 
             # Biases
             caffe_data = reference_net.params[caffe_param][1].data
             tfVar = tfVars[tf_param + '/b_conv:0']
             ops.append(tfVar.assign(caffe_data))
-            print 'copied ', caffe_param, 'biases to', tf_param
+            print('copied ', caffe_param, 'biases to', tf_param)
         elif 'fc' in copy_param[1]:
             tfVar = tfVars[tf_param + '/W_fc:0']
             ops.append(tfVar.assign(caffe_data))
-            print 'copied ', caffe_param, 'weights to', tf_param
+            print('copied ', caffe_param, 'weights to', tf_param)
 
             # Biases
             caffe_data = reference_net.params[caffe_param][1].data
             tfVar = tfVars[tf_param + '/b_fc:0']
             ops.append(tfVar.assign(caffe_data))
-            print 'copied ', caffe_param, 'biases to', tf_param
+            print('copied ', caffe_param, 'biases to', tf_param)
         elif 'lstm' in copy_param[1]:
             tfVar = tfVars[tf_param + '/weights:0']
             ops.append(tfVar.assign(caffe_data))
-            print 'copied ', caffe_param, 'weights to', tf_param
+            print('copied ', caffe_param, 'weights to', tf_param)
 
             # Biases
             caffe_data = reference_net.params[caffe_param][1].data
             tfVar = tfVars[tf_param + '/biases:0']
             ops.append(tfVar.assign(caffe_data))
-            print 'copied ', caffe_param, 'biases to', tf_param
+            print('copied ', caffe_param, 'biases to', tf_param)
         else:
             tfVar = tfVars[tf_param + ':0']
             ops.append(tfVar.assign(caffe_data))
-            print 'copied ', caffe_param, 'to', tf_param
+            print('copied ', caffe_param, 'to', tf_param)
 
-    print 'starting ops'
+    print('starting ops')
     sess.run(ops)
-    print 'done ops'
-    print 'starting summary'
+    print('done ops')
+    print('starting summary')
     run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
     run_metadata = tf.RunMetadata()
     summary_str, _ = sess.run([summary, train_op],
@@ -133,14 +133,14 @@ with sess.as_default():
     summary_writer.add_run_metadata(run_metadata, 'step_%07d' % 0)
     summary_writer.add_summary(summary_str, 0)
     summary_writer.flush()
-    print 'summary done'
-    print 'starting save'
+    print('summary done')
+    print('starting save')
     saveDir = 'logs/caffe_copy'
     if not os.path.exists(saveDir):
         os.makedirs(saveDir)
     checkpoint_file = os.path.join(saveDir, 'model.ckpt')
     saver.save(sess, checkpoint_file, global_step=0)
-    print 'saved successfully'
+    print('saved successfully')
 
     IMAGENET_MEAN = np.array([123.151630838, 115.902882574, 103.062623801])
 
@@ -153,13 +153,13 @@ with sess.as_default():
     conv1OutTF = sess.run(tf.get_default_graph().get_tensor_by_name('re3/conv1/Relu:0'), feed_dict={imagePlaceholder: random_input})
     conv1OutTF = conv1OutTF.transpose(0,3,1,2)
 
-    print conv1Out
-    print conv1Out - conv1OutTF
-    print np.max(np.abs(conv1Out - conv1OutTF))
-    print np.mean(np.abs(conv1Out - conv1OutTF))
-    assert np.mean(np.abs(conv1Out - conv1OutTF)) < 0.001
+    print(conv1Out)
+    print(conv1Out - conv1OutTF)
+    print(np.max(np.abs(conv1Out - conv1OutTF)))
+    print(np.mean(np.abs(conv1Out - conv1OutTF)))
+    assert(np.mean(np.abs(conv1Out - conv1OutTF)) < 0.001)
 
-    print 'tested successfully'
+    print('tested successfully')
 
 
 
