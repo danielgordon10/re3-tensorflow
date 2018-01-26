@@ -28,7 +28,8 @@ from constants import MAX_TRACK_LENGTH
 SPEED_OUTPUT = True
 
 class Re3TrackerFactory(object):
-    def __init__(self):
+    def __init__(self, gpu_id=GPU_ID):
+        os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
         tf.Graph().as_default()
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
@@ -37,8 +38,8 @@ class Re3TrackerFactory(object):
         self.tracked_data = {}
         self.lock = threading.Lock()
 
-    def create_tracker(self, gpu_id=0):
-        tracker = Re3Tracker(self.sess, tracked_data=self.tracked_data, lock=self.lock, reuse=self.is_initialized, gpu_id=gpu_id)
+    def create_tracker(self):
+        tracker = Re3Tracker(self.sess, tracked_data=self.tracked_data, lock=self.lock, reuse=self.is_initialized)
         if not self.is_initialized:
             basedir = os.path.dirname(__file__)
             ckpt = tf.train.get_checkpoint_state(os.path.join(basedir, '..', LOG_DIR, 'checkpoints'))
@@ -48,11 +49,7 @@ class Re3TrackerFactory(object):
 
 
 class Re3Tracker(object):
-    def __init__(self, sess, tracked_data, lock, reuse=False, gpu_id=0):
-        if gpu_id is not None:
-            os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
-        else:
-            os.environ['CUDA_VISIBLE_DEVICES'] = str(GPU_ID)
+    def __init__(self, sess, tracked_data, lock, reuse=False):
 
         self.sess = sess
 
