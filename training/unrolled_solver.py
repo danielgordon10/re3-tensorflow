@@ -592,7 +592,7 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--timing', action='store_true', default=False)
     parser.add_argument('-o', '--output', action='store_true', default=False)
     parser.add_argument('-c', '--clear_snapshots', action='store_true', default=False, dest='clearSnapshots')
-    parser.add_argument('-p', '--port', action='store', default=9987, dest='port', type=int)
+    parser.add_argument('-p', '--port', action='store', default=PORT, dest='port', type=int)
     parser.add_argument('--run_val', action='store_true', default=False)
     parser.add_argument('--val_device', type=str, default='0', help='Device number or string for val process to use.')
     parser.add_argument('-m', '--max_steps', type=int, default=NUM_ITERATIONS, help='Number of steps to run trainer.')
