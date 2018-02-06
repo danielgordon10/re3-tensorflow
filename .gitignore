@@ -9,3 +9,4 @@ labels/
 *.mp4
 *.json
 *venv
+.idea
