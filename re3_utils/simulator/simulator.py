@@ -4,7 +4,6 @@ import numpy as np
 import random
 import time
 
-
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(
@@ -109,8 +108,8 @@ def get_distractor_crop(inputImage, bbox):
     minIntersectionRect = np.zeros(4)
     bboxArea = bboxOnXYWH[2] * bboxOnXYWH[3]
     for _ in range(10000):
-        randW = np.random.randint(10, inputImage.shape[1] * .5)
-        randH = np.random.randint(10, inputImage.shape[0] * .5)
+        randW = np.random.randint(2, inputImage.shape[1])
+        randH = np.random.randint(2, inputImage.shape[0])
         randX = np.random.randint(int(randW / 2), int(inputImage.shape[1] - randW / 2))
         randY = np.random.randint(int(randH / 2), int(inputImage.shape[0] - randH / 2))
         randRect = xywh_to_xyxy([randX, randY, randW, randH], round=True)
@@ -344,6 +343,7 @@ def get_image_sequence(seqLen, imCount=0, writeFull=False):
 
         if writeFull:
             newImage = get_image_for_frame(trackedObjects, background)
+            drawing.drawRect(newImage, scale_bbox(prevLoc, CROP_PAD), 3, [0,255,0])
             cv2.imwrite('images_full/%07d.png' % seqInd, newImage[:,:,::-1])
             seqInd += 1
         step(trackedObjects)
