@@ -1,12 +1,17 @@
 import tensorflow as tf
 import cv2
-import cPickle
 import numpy as np
 import socket
 import struct
 import time
 import multiprocessing
 import random
+
+try:
+    import cPickle as pickle
+except:
+    # Python 3
+    import pickle
 
 import sys
 import os.path
@@ -66,12 +71,12 @@ class Dataset(object):
         self.networkOutputs = networkOutputs
         self.state1 = state1
         self.state2 = state2
-        self.initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in xrange(4)])
+        self.initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in range(4)])
 
     def add_dataset(self, dataset_name):
         dataset_ind = len(self.datasets)
         dataset_gt = get_datasets.get_data_for_dataset(dataset_name, 'train')['gt']
-        for xx in xrange(dataset_gt.shape[0]):
+        for xx in range(dataset_gt.shape[0]):
             line = dataset_gt[xx,:].astype(int)
             self.key_lookup[(dataset_ind, line[4], line[5], line[6])] = xx
         self.datasets.append(dataset_gt)
@@ -79,14 +84,14 @@ class Dataset(object):
     def getData(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((HOST, self.port))
-        sock.sendall('Ready' + '\n')
+        sock.sendall(('Ready' + '\n').encode('utf-8'))
         receivedBytes = sock.recv(4)
         messageLength = struct.unpack('>I', receivedBytes)[0]
         key = sock.recv(messageLength)
-        key = cPickle.loads(key)
+        key = pickle.loads(key)
 
         images = [None] * self.delta
-        for nn in xrange(self.delta):
+        for nn in range(self.delta):
             image = BytesIO()
             # Connect to server and send data.
 
@@ -106,7 +111,7 @@ class Dataset(object):
             receivedBytes = sock.recv(4)
             messageLength = struct.unpack('>I', receivedBytes)[0]
             shape = sock.recv(messageLength)
-            shape = cPickle.loads(shape)
+            shape = pickle.loads(shape)
             imageArray = imageArray.reshape(shape)
             if len(imageArray.shape) < 3:
                 imageArray = np.tile(imageArray[:,:,np.newaxis], (1,1,3))
@@ -163,13 +168,13 @@ class Dataset(object):
             if useSimulator:
                 # Initialize the simulation and run through a few frames.
                 trackingObj, trackedObjects, background = simulator.create_new_track()
-                for _ in xrange(random.randint(0,200)):
+                for _ in range(random.randint(0,200)):
                     simulator.step(trackedObjects)
                     bbox = trackingObj.get_object_box()
                     occlusion = simulator.measure_occlusion(bbox, trackingObj.occluder_boxes, cropPad=1)
                     if occlusion > .2:
                         break
-                for _ in xrange(1000):
+                for _ in range(1000):
                     bbox = trackingObj.get_object_box()
                     occlusion = simulator.measure_occlusion(bbox, trackingObj.occluder_boxes, cropPad=1)
                     if occlusion < 0.01:
@@ -196,7 +201,7 @@ class Dataset(object):
             bboxPrev = initBox
             lstmState = None
 
-            for dd in xrange(self.delta):
+            for dd in range(self.delta):
                 # bboxOn is the gt location in image1
                 if useSimulator:
                     bboxOn = trackingObj.get_object_box()
@@ -314,7 +319,7 @@ class Dataset(object):
             dataset = dataset.prefetch(int(np.ceil(self.prefetch_size * 1.0 / PARALLEL_SIZE)))
             return dataset
 
-        dataset = tf.data.Dataset.from_tensor_slices(range(PARALLEL_SIZE)).interleave(
+        dataset = tf.data.Dataset.from_tensor_slices(list(range(PARALLEL_SIZE))).interleave(
                 get_data_generator, cycle_length=PARALLEL_SIZE)
 
         dataset = dataset.batch(batch_size)
@@ -325,15 +330,15 @@ class Dataset(object):
 
 if __name__ == '__main__':
     port = 9997
-    delta = 3
+    delta = 2
     debug = False
     config = tf.ConfigProto()
     config.gpu_options.allow_growth=True
     sess = tf.Session(config=config)
     dataset = Dataset(sess, delta, 1, port, debug)
     forwardNetworkImagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
-    prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in xrange(4)])
-    initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in xrange(4)])
+    prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in range(4)])
+    initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in range(4)])
     networkOutputs, state1, state2 = network.inference(
             forwardNetworkImagePlaceholder, num_unrolls=1, train=False,
             prevLstmState=prevLstmState, reuse=False)

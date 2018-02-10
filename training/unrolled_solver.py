@@ -62,13 +62,13 @@ def main(FLAGS):
     if ',' in FLAGS.cuda_visible_devices:
         with tf.device('/gpu:1'):
             forwardNetworkImagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
-            prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in xrange(4)])
+            prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in range(4)])
             networkOutputs, state1, state2 = network.inference(
                     forwardNetworkImagePlaceholder, num_unrolls=1, train=False,
                     prevLstmState=prevLstmState, reuse=False)
     else:
         forwardNetworkImagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
-        prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in xrange(4)])
+        prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in range(4)])
         networkOutputs, state1, state2 = network.inference(
                 forwardNetworkImagePlaceholder, num_unrolls=1, train=False,
                 prevLstmState=prevLstmState, reuse=False)
