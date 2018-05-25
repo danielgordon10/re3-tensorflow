@@ -84,10 +84,14 @@ Re3 is released under the GPL V3.
 
 Please cite Re3 in your publications if it helps your research:
 ```
-@article{gordon2017re3,
-  title={Re3: Real-Time Recurrent Regression Networks for Object Tracking},
+@article{gordon2018re3,
+  title={Re3: Real-Time Recurrent Regression Networks for Visual Tracking of Generic Objects},
   author={Gordon, Daniel and Farhadi, Ali and Fox, Dieter},
-  journal={arXiv preprint arXiv:1705.06368},
-  year={2017}
+  journal={IEEE Robotics and Automation Letters},
+  volume={3},
+  number={2},
+  pages={788--795},
+  year={2018},
+  publisher={IEEE}
 }
 ```
