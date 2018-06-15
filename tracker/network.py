@@ -104,7 +104,7 @@ def inference(inputs, num_unrolls, train, batch_size=None, prevLstmState=None, r
 
         # Embed Fully Connected Layer
         with tf.variable_scope('fc6'):
-            fc6_out = tf_util.fc_layer(conv_layers, 2048)
+            fc6_out = tf_util.fc_layer(conv_layers, 1024)
 
             # (BxT)xC
             fc6_reshape = tf.reshape(fc6_out, tf.stack([batch_size, num_unrolls, fc6_out.get_shape().as_list()[-1]]))
@@ -112,7 +112,8 @@ def inference(inputs, num_unrolls, train, batch_size=None, prevLstmState=None, r
         # LSTM stuff
         swap_memory = num_unrolls > 1
         with tf.variable_scope('lstm1'):
-            lstm1 = CaffeLSTMCell(LSTM_SIZE, initializer=msra_initializer)
+            #lstm1 = CaffeLSTMCell(LSTM_SIZE, initializer=msra_initializer)
+            lstm1 = tf.contrib.rnn.LSTMCell(LSTM_SIZE, use_peepholes=True, initializer=msra_initializer, reuse=reuse)
             if prevLstmState is not None:
                 state1 = tf.contrib.rnn.LSTMStateTuple(prevLstmState[0], prevLstmState[1])
             else:
@@ -124,7 +125,8 @@ def inference(inputs, num_unrolls, train, batch_size=None, prevLstmState=None, r
                     tf_util.variable_summaries(var, var.name[:-2])
 
         with tf.variable_scope('lstm2'):
-            lstm2 = CaffeLSTMCell(LSTM_SIZE, initializer=msra_initializer)
+            #lstm2 = CaffeLSTMCell(LSTM_SIZE, initializer=msra_initializer)
+            lstm2 = tf.contrib.rnn.LSTMCell(LSTM_SIZE, use_peepholes=True, initializer=msra_initializer, reuse=reuse)
             state2 = lstm2.zero_state(batch_size, dtype=tf.float32)
             if prevLstmState is not None:
                 state2 = tf.contrib.rnn.LSTMStateTuple(prevLstmState[2], prevLstmState[3])

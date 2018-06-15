@@ -2,7 +2,7 @@
 CROP_SIZE = 227
 CROP_PAD = 2
 MAX_TRACK_LENGTH = 32
-LSTM_SIZE = 1024
+LSTM_SIZE = 512
 
 import os.path
 LOG_DIR = os.path.join(os.path.dirname(__file__), 'logs')
