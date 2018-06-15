@@ -1,11 +1,17 @@
+import pdb
 import argparse
 import cv2
 import glob
 import numpy as np
 import os
+import random
+import struct
+import sys
 import tensorflow as tf
 import time
 import threading
+
+from io import BytesIO
 
 import sys
 import os.path
@@ -13,10 +19,15 @@ sys.path.append(os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir)))
 
 import tf_dataset
+import test_net
 from tracker import network
+from tracker import re3_tracker
 from re3_utils.util import bb_util
+from re3_utils.util import im_util
 from re3_utils.tensorflow_util import tf_util
 from re3_utils.util import drawing
+from re3_utils.util import IOU
+
 
 from constants import CROP_PAD
 from constants import CROP_SIZE
@@ -30,7 +41,7 @@ HOST = 'localhost'
 NUM_ITERATIONS = int(1e6)
 PORT = 9997
 
-LEARNING_RATE = 1e-4
+LEARNING_RATE = 1e-5
 
 def main(FLAGS):
     global PORT, delta, REPLAY_BUFFER_SIZE
@@ -53,9 +64,7 @@ def main(FLAGS):
     tf.Graph().as_default()
     tf.logging.set_verbosity(tf.logging.INFO)
 
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth=True
-    sess = tf.Session(config=config)
+    sess = tf_util.Session()
 
     # Create the nodes for single image forward passes for learning to fix mistakes.
     # Parameters here are shared with the learned network.
@@ -63,12 +72,14 @@ def main(FLAGS):
         with tf.device('/gpu:1'):
             forwardNetworkImagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
             prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in range(4)])
+            initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in range(4)])
             networkOutputs, state1, state2 = network.inference(
                     forwardNetworkImagePlaceholder, num_unrolls=1, train=False,
                     prevLstmState=prevLstmState, reuse=False)
     else:
         forwardNetworkImagePlaceholder = tf.placeholder(tf.uint8, shape=(2, CROP_SIZE, CROP_SIZE, 3))
         prevLstmState = tuple([tf.placeholder(tf.float32, shape=(1, LSTM_SIZE)) for _ in range(4)])
+        initialLstmState = tuple([np.zeros((1, LSTM_SIZE)) for _ in range(4)])
         networkOutputs, state1, state2 = network.inference(
                 forwardNetworkImagePlaceholder, num_unrolls=1, train=False,
                 prevLstmState=prevLstmState, reuse=False)
@@ -77,6 +88,8 @@ def main(FLAGS):
             debug=FLAGS.debug)
     tf_dataset_obj.initialize_tf_placeholders(
             forwardNetworkImagePlaceholder, prevLstmState, networkOutputs, state1, state2)
+
+
     tf_dataset_iterator = tf_dataset_obj.get_dataset(batchSize)
     imageBatch, labelsBatch = tf_dataset_iterator.get_next()
     imageBatch = tf.reshape(imageBatch, (batchSize * delta * 2, CROP_SIZE, CROP_SIZE, 3))
@@ -101,6 +114,7 @@ def main(FLAGS):
         tf.summary.scalar('l2_regularizer', tfLossFull - tfLoss),
         ])
 
+    train_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
     init = tf.global_variables_initializer()
     saver = tf.train.Saver()
     longSaver = tf.train.Saver()
@@ -110,11 +124,7 @@ def main(FLAGS):
     startIter = 0
     if FLAGS.restore:
         print('Restoring')
-        ckpt = tf.train.get_checkpoint_state(LOG_DIR + '/checkpoints')
-        if ckpt and ckpt.model_checkpoint_path:
-            tf_util.restore(sess, ckpt.model_checkpoint_path)
-            startIter = int(ckpt.model_checkpoint_path.split('-')[-1])
-            print('Restored', startIter)
+        startIter = tf_util.restore_from_dir(sess, os.path.join(LOG_DIR, 'checkpoints'))
     if not debug:
         tt = time.localtime()
         time_str = ('%04d_%02d_%02d_%02d_%02d_%02d' %
@@ -133,13 +143,17 @@ def main(FLAGS):
     lost_targets_ph = tf.placeholder(tf.float32, shape=[])
     mean_iou_ph = tf.placeholder(tf.float32, shape=[])
     avg_ph = tf.placeholder(tf.float32, shape=[])
-    with tf.name_scope('test'):
-        test_summary_op = tf.summary.merge([
-            tf.summary.scalar('robustness', robustness_ph),
-            tf.summary.scalar('lost_targets', lost_targets_ph),
-            tf.summary.scalar('mean_iou', mean_iou_ph),
-            tf.summary.scalar('avg_iou_robustness', avg_ph),
-            ])
+    if FLAGS.run_val:
+        val_gpu = None if FLAGS.val_device == '0' else FLAGS.val_device
+        test_tracker = re3_tracker.CopiedRe3Tracker(sess, train_vars, val_gpu)
+        test_runner = test_net.TestTrackerRunner(test_tracker)
+        with tf.name_scope('test'):
+            test_summary_op = tf.summary.merge([
+                tf.summary.scalar('robustness', robustness_ph),
+                tf.summary.scalar('lost_targets', lost_targets_ph),
+                tf.summary.scalar('mean_iou', mean_iou_ph),
+                tf.summary.scalar('avg_iou_robustness', avg_ph),
+                ])
 
     if debug:
         cv2.namedWindow('debug', cv2.WINDOW_NORMAL)
@@ -231,15 +245,11 @@ def main(FLAGS):
                     summary_writer.add_summary(summary_str, iteration)
                     summary_writer.flush()
                 if (FLAGS.run_val and (numIters == 1 or iteration % 500 == 0)):
-                    # Run a validation set eval in a separate process.
-                    def test_func():
-                        test_iter_on = iteration
-                        print('Staring test iter', test_iter_on)
-                        import subprocess
-                        import json
-                        command = ['python', 'test_net.py', '--video_sample_rate', str(10), '--no-display', '-v', str(FLAGS.val_device)]
-                        subprocess.call(command)
-                        result = json.load(open('results.json', 'r'))
+                    # Run a validation set eval in a separate thread.
+                    def test_func(test_iter_on):
+                        print('Starting test iter', test_iter_on)
+                        test_runner.reset()
+                        result = test_runner.run_test(dataset=FLAGS.val_dataset, display=False)
                         summary_str = sess.run(test_summary_op, feed_dict={
                             robustness_ph : result['robustness'],
                             lost_targets_ph : result['lostTarget'],
@@ -249,8 +259,7 @@ def main(FLAGS):
                         summary_writer.add_summary(summary_str, test_iter_on)
                         os.remove('results.json')
                         print('Ending test iter', test_iter_on)
-                    test_thread = threading.Thread(target=test_func)
-                    test_thread.daemon = True
+                    test_thread = threading.Thread(target=test_func, args=(iteration,))
                     test_thread.start()
             if FLAGS.output:
                 # Look at some of the outputs.
@@ -299,8 +308,9 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--timing', action='store_true', default=False)
     parser.add_argument('-o', '--output', action='store_true', default=False)
     parser.add_argument('-c', '--clear_snapshots', action='store_true', default=False, dest='clearSnapshots')
-    parser.add_argument('-p', '--port', action='store', default=9997, dest='port', type=int)
+    parser.add_argument('-p', '--port', action='store', default=9987, dest='port', type=int)
     parser.add_argument('--run_val', action='store_true', default=False)
+    parser.add_argument('--val_dataset', type=str, default='vot', help='Dataset to test on.')
     parser.add_argument('--val_device', type=str, default='0', help='Device number or string for val process to use.')
     parser.add_argument('-m', '--max_steps', type=int, default=NUM_ITERATIONS, help='Number of steps to run trainer.')
     FLAGS = parser.parse_args()

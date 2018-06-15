@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import tensorflow as tf
 
@@ -150,7 +151,9 @@ def prelu(input, weights, name='prelu'):
     with tf.variable_scope(name):
         return tf.nn.relu(input) - weights * tf.nn.relu(-input)
 
-def restore(session, save_file):
+def restore(session, save_file, raise_if_not_found=False):
+    if not os.path.exists(save_file) and raise_if_not_found:
+        raise Exception('File %s not found' % save_file)
     reader = tf.train.NewCheckpointReader(save_file)
     saved_shapes = reader.get_variable_to_shape_map()
     var_names = sorted([(var.name, var.name.split(':')[0]) for var in tf.global_variables()
@@ -158,6 +161,7 @@ def restore(session, save_file):
     var_name_to_var = {var.name : var for var in tf.global_variables()}
     restore_vars = []
     restored_var_names = set()
+    restored_var_new_shape = []
     print('Restoring:')
     with tf.variable_scope(tf.get_variable_scope(), reuse=True):
         for var_name, saved_var_name in var_names:
@@ -168,10 +172,14 @@ def restore(session, save_file):
             var_shape = curr_var.get_shape().as_list()
             if var_shape == saved_shapes[saved_var_name]:
                 restore_vars.append(curr_var)
-                print(str(saved_var_name) + ' -> ' + str(var_shape) + ' = ' + str(np.prod(var_shape) * 4 / 10**6) + 'MB')
+                print(str(saved_var_name) + ' -> \t' + str(var_shape) + ' = ' +
+                      str(int(np.prod(var_shape) * 4 / 10**6)) + 'MB')
                 restored_var_names.add(saved_var_name)
             else:
-                print('Shape mismatch for var', saved_var_name, 'expected', var_shape, 'got', saved_shapes[saved_var_name])
+                print('Shape mismatch for var', saved_var_name, 'expected', var_shape,
+                      'got', saved_shapes[saved_var_name])
+                restored_var_new_shape.append((saved_var_name, curr_var, reader.get_tensor(saved_var_name)))
+                print('bad things')
     ignored_var_names = sorted(list(set(saved_shapes.keys()) - restored_var_names))
     print('\n')
     if len(ignored_var_names) == 0:
@@ -182,8 +190,40 @@ def restore(session, save_file):
     if len(restore_vars) > 0:
         saver = tf.train.Saver(restore_vars)
         saver.restore(session, save_file)
-    print('Restored %s' % save_file)
 
+    if len(restored_var_new_shape) > 0:
+        print('trying to restore misshapen variables')
+        assign_ops = []
+        for name, kk, vv in restored_var_new_shape:
+            copy_sizes = np.minimum(kk.get_shape().as_list(), vv.shape)
+            slices = [slice(0,cs) for cs in copy_sizes]
+            print('copy shape', name, kk.get_shape().as_list(), '->', copy_sizes.tolist())
+            new_arr = session.run(kk)
+            new_arr[slices] = vv[slices]
+            assign_ops.append(tf.assign(kk, new_arr))
+        session.run(assign_ops)
+        print('Copying unmatched weights done')
+    print('Restored %s' % save_file)
+    try:
+        start_iter = int(save_file.split('-')[-1])
+    except ValueError:
+        print('Could not parse start iter, assuming 0')
+        start_iter = 0
+    return start_iter
+
+
+def restore_from_dir(sess, folder_path, raise_if_not_found=False):
+    start_iter = 0
+    ckpt = tf.train.get_checkpoint_state(folder_path)
+    if ckpt and ckpt.model_checkpoint_path:
+        print('Restoring')
+        start_iter = restore(sess, ckpt.model_checkpoint_path)
+    else:
+        if raise_if_not_found:
+            raise Exception('No checkpoint to restore in %s' % folder_path)
+        else:
+            print('No checkpoint to restore in %s' % folder_path)
+    return start_iter
 
 def remove_axis_get_shape(curr_shape, axis):
     assert axis > 0, 'Axis must be greater than 0'
@@ -202,4 +242,6 @@ def remove_axis(input, axis):
             new_shape = remove_axis_get_shape(curr_shape, ax)
     return tf.reshape(input, tf.stack(new_shape))
 
+def Session():
+    return tf.Session(config=tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True), allow_soft_placement=True))
 
