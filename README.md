@@ -10,7 +10,7 @@ To use it, download it [here](https://goo.gl/NWGXGM), extract the tar, and place
 
 ## Requirements:
 1. Python 2.7+ or 3.5+.
-2. [Tensorflow](https://www.tensorflow.org/) and its requirements. I use the pip tensorflow-gpu==1.4.0
+2. [Tensorflow](https://www.tensorflow.org/) and its requirements. I use the pip tensorflow-gpu==1.5.0
 3. [NumPy](http://www.numpy.org/). The pip should work.
 4. [OpenCV 2](http://opencv.org/opencv-2-4-8.html). The opencv-python pip should work.
 5. [CUDA (Strongly Recommended)](https://developer.nvidia.com/cuda-downloads).
@@ -84,10 +84,14 @@ Re3 is released under the GPL V3.
 
 Please cite Re3 in your publications if it helps your research:
 ```
-@article{gordon2017re3,
-  title={Re3: Real-Time Recurrent Regression Networks for Object Tracking},
+@article{gordon2018re3,
+  title={Re3: Real-Time Recurrent Regression Networks for Visual Tracking of Generic Objects},
   author={Gordon, Daniel and Farhadi, Ali and Fox, Dieter},
-  journal={arXiv preprint arXiv:1705.06368},
-  year={2017}
+  journal={IEEE Robotics and Automation Letters},
+  volume={3},
+  number={2},
+  pages={788--795},
+  year={2018},
+  publisher={IEEE}
 }
 ```

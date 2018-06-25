@@ -19,4 +19,4 @@ For each dataset, for each mode that you have (train/val/test) there should be a
 |:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|
 |xmin    |ymin    |xmax    |ymax    |video_id|track_id|im_id   |extra   |
 
-The rows should be ordered such that tracks are sequential (rather than having all tracks in a single image sequentially ordered). If desired, the rows can be easily reordered using np.lexsort (see [imagenet_video/make_label_files.py](imagenet_video/make_label_files.py) for an example.
+The rows should be ordered such that tracks are sequential (rather than having all tracks in a single image sequentially ordered). If desired, the rows can be easily reordered using np.lexsort (see [imagenet_video/make_label_files.py](imagenet_video/make_label_files.py) for an example).
