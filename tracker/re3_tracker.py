@@ -37,15 +37,14 @@ class Re3Tracker(object):
         self.outputs, self.state1, self.state2 = network.inference(
                 self.imagePlaceholder, num_unrolls=1, batch_size=self.batch_size, train=False,
                 prevLstmState=self.prevLstmState)
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
-        self.sess = tf.Session(config=config)
+        self.sess = tf_util.Session()
+        self.sess.run(tf.global_variables_initializer())
         ckpt = tf.train.get_checkpoint_state(os.path.join(basedir, '..', LOG_DIR, 'checkpoints'))
         if ckpt is None:
             raise IOError(
                     ('Checkpoint model could not be found. '
                     'Did you download the pretrained weights? '
-                    'Download them here: https://goo.gl/NWGXGM and read the Model section of the Readme.'))
+                    'Download them here: http://bit.ly/2mbZMrg and read the Model section of the Readme.'))
         tf_util.restore(self.sess, ckpt.model_checkpoint_path)
 
         self.tracked_data = {}
