@@ -44,7 +44,7 @@ class Re3Tracker(object):
             raise IOError(
                     ('Checkpoint model could not be found. '
                     'Did you download the pretrained weights? '
-                    'Download them here: http://bit.ly/2mbZMrg and read the Model section of the Readme.'))
+                    'Download them here: http://bit.ly/2L5deYF and read the Model section of the Readme.'))
         tf_util.restore(self.sess, ckpt.model_checkpoint_path)
 
         self.tracked_data = {}
