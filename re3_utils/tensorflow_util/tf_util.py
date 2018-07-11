@@ -178,8 +178,8 @@ def restore(session, save_file, raise_if_not_found=False):
             else:
                 print('Shape mismatch for var', saved_var_name, 'expected', var_shape,
                       'got', saved_shapes[saved_var_name])
-                restored_var_new_shape.append((saved_var_name, curr_var, reader.get_tensor(saved_var_name)))
-                print('bad things')
+                #restored_var_new_shape.append((saved_var_name, curr_var, reader.get_tensor(saved_var_name)))
+                #print('bad things')
     ignored_var_names = sorted(list(set(saved_shapes.keys()) - restored_var_names))
     print('\n')
     if len(ignored_var_names) == 0:
@@ -191,6 +191,7 @@ def restore(session, save_file, raise_if_not_found=False):
         saver = tf.train.Saver(restore_vars)
         saver.restore(session, save_file)
 
+    '''
     if len(restored_var_new_shape) > 0:
         print('trying to restore misshapen variables')
         assign_ops = []
@@ -203,6 +204,7 @@ def restore(session, save_file, raise_if_not_found=False):
             assign_ops.append(tf.assign(kk, new_arr))
         session.run(assign_ops)
         print('Copying unmatched weights done')
+    '''
     print('Restored %s' % save_file)
     try:
         start_iter = int(save_file.split('-')[-1])
