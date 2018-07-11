@@ -29,7 +29,7 @@ source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
-Then go to http://bit.ly/2mbZMrg and download the file. Finally:
+Then go to http://bit.ly/2L5deYF and download the file. Finally:
 ```bash
 mkdir logs
 mv /path/to/downloads/checkpoints.tar.gz logs
