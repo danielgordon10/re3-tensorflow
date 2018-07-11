@@ -4,9 +4,11 @@
 
 Re3 is a real-time recurrent regression tracker. It offers accuracy and robustness similar to other state-of-the-art trackers while operating at 150 FPS. For more details, contact xkcd@cs.washington.edu. This repository implements the training and testing procedure from https://arxiv.org/pdf/1705.06368.pdf. A sample of the tracker can be found here: https://youtu.be/RByCiOLlxug.
 
+## Recent Updates:
+I have changed the network design to be smaller than the one presented in the paper without loss in accuracy. If you want to use the smaller, faster network, you should do a git pull and download the new model linked to in the models section of the readme.
+
 ## Model:
-The model weights we used in our paper were ported from Caffe to Tensorflow. Because they deal with padding differently, results are slightly different, but the model still works well.
-To use it, download it [here](https://goo.gl/NWGXGM), extract the tar, and place in your log directory (mine is "logs").
+The new smaller pretrained weights model is available for download at http://bit.ly/2mbZMrg. Please download it, unzip it, and place it in your logs directory.
 
 ## Requirements:
 1. Python 2.7+ or 3.5+.
@@ -17,15 +19,24 @@ To use it, download it [here](https://goo.gl/NWGXGM), extract the tar, and place
 6. [cuDNN (Recommended)](https://developer.nvidia.com/cudnn).
 
 ## First Time Setup:
+Here are sample steps for setup on Ubuntu. For another operating system, replace the apt-get command with however you normally install stuff.
 ```bash
 git clone git@gitlab.cs.washington.edu:xkcd/re3-tensorflow.git
 cd re3-tensorflow
 sudo apt-get install python-virtualenv
-virtualenv venv --system-site-packages
+virtualenv venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
+Then go to http://bit.ly/2mbZMrg and download the file. Finally:
+```bash
+mkdir logs
+mv /path/to/downloads/checkpoints.tar.gz logs
+cd logs
+tar -zxvf checkpoints.tar.gz
+```
+
 ### Enter the virtualenv in a later session to use the installed libraries.
 ```bash
 source venv/bin/activate
