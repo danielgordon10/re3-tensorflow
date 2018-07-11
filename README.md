@@ -8,7 +8,7 @@ Re3 is a real-time recurrent regression tracker. It offers accuracy and robustne
 I have changed the network design to be smaller than the one presented in the paper without loss in accuracy. If you want to use the smaller, faster network, you should do a git pull and download the new model linked to in the models section of the readme.
 
 ## Model:
-The new smaller pretrained weights model is available for download at http://bit.ly/2mbZMrg. Please download it, unzip it, and place it in your logs directory.
+The new smaller pretrained weights model is available for download at http://bit.ly/2L5deYF. Please download it, unzip it, and place it in your logs directory. For more instructions see the First Time Setup section.
 
 ## Requirements:
 1. Python 2.7+ or 3.5+.
