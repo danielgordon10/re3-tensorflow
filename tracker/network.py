@@ -127,7 +127,6 @@ def inference(inputs, num_unrolls, train, batch_size=None, prevLstmState=None, r
         with tf.variable_scope('lstm2'):
             #lstm2 = CaffeLSTMCell(LSTM_SIZE, initializer=msra_initializer)
             lstm2 = tf.contrib.rnn.LSTMCell(LSTM_SIZE, use_peepholes=True, initializer=msra_initializer, reuse=reuse)
-            state2 = lstm2.zero_state(batch_size, dtype=tf.float32)
             if prevLstmState is not None:
                 state2 = tf.contrib.rnn.LSTMStateTuple(prevLstmState[2], prevLstmState[3])
             else:
