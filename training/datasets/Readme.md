@@ -22,4 +22,7 @@ For each dataset, for each mode that you have (train/val/test) there should be a
 The rows should be ordered such that tracks are sequential (rather than having all tracks in a single image sequentially ordered). If desired, the rows can be easily reordered using np.lexsort (see [imagenet_video/make_label_files.py](imagenet_video/make_label_files.py) for an example).
 
 ## Sources
-- Imagenet Video Dataset: http://bvisionweb1.cs.unc.edu/ilsvrc2015/download-videos-3j16.php#vid
+The official ImageNet pages seem to be rapidly leaving the internet. Unfortunately, I cannot rehost them due to legal restrictions. 
+If you are lucky, these links will still work when you try them.
+- ImageNet Video Dataset: http://bvisionweb1.cs.unc.edu/ilsvrc2015/download-videos-3j16.php#vid
+- ImageNet Object Detection (academic torrents) http://academictorrents.com/collection/imagenet-lsvrc-2015
