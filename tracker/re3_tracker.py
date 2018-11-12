@@ -220,5 +220,42 @@ class Re3Tracker(object):
         return outputBoxes
 
 
+class CopiedRe3Tracker(Re3Tracker):
+    def __init__(self, sess, copy_vars, gpu=None):
+        self.sess = sess
+        self.imagePlaceholder = tf.placeholder(tf.uint8, shape=(None, CROP_SIZE, CROP_SIZE, 3))
+        self.prevLstmState = tuple([tf.placeholder(tf.float32, shape=(None, LSTM_SIZE)) for _ in range(4)])
+        self.batch_size = tf.placeholder(tf.int32, shape=())
+        network_scope = 'test_network'
+        if gpu is not None:
+            with tf.device('/gpu:' + str(gpu)):
+                with tf.variable_scope(network_scope):
+                    self.outputs, self.state1, self.state2 = network.inference(
+                            self.imagePlaceholder, num_unrolls=1, batch_size=self.batch_size, train=False,
+                            prevLstmState=self.prevLstmState)
+        else:
+            with tf.variable_scope(network_scope):
+                self.outputs, self.state1, self.state2 = network.inference(
+                        self.imagePlaceholder, num_unrolls=1, batch_size=self.batch_size, train=False,
+                        prevLstmState=self.prevLstmState)
+        local_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=network_scope)
+        self.sync_op = self.sync_from(copy_vars, local_vars)
+
+        self.tracked_data = {}
+
+        self.time = 0
+        self.total_forward_count = -1
+
+    def reset(self):
+        self.tracked_data = {}
+        self.sess.run(self.sync_op)
+
+    def sync_from(self, src_vars, dst_vars):
+        sync_ops = []
+        with tf.name_scope('Sync'):
+            for(src_var, dst_var) in zip(src_vars, dst_vars):
+                sync_op = tf.assign(dst_var, src_var)
+                sync_ops.append(sync_op)
+        return tf.group(*sync_ops)
 
 
