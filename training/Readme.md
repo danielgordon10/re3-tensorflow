@@ -24,4 +24,5 @@ The training regime from the Re3 paper is to start with 2 unrolls and a batch si
 ## Testing
 To test the network, run the test.py script. This has many helpful flags which can tweak the testing, such as choosing to display or not display the images, to record a video, to skip some number of initial frames, to only test every n videos, and more. To view all the options, use the `-h` flag.
 
-
+## Training from scratch
+If for whatever reason you want to train starting all the way from the initial [CaffeNet weights](https://github.com/BVLC/caffe/tree/master/models/bvlc_reference_caffenet), I have ported the conv layers from Caffe to Tensorflow/Re3. You can download those from http://bit.ly/2rNaI1l.
