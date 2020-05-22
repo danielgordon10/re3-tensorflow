@@ -1,12 +1,13 @@
-# Re3
-<img src="/demo/sample_1.gif" height="300"/>
-<img src="/demo/sample_2.gif" height="300"/>
+# Re3 in TensorFlow
+[Re3: Real-Time Recurrent Regression Networks for Visual Tracking of Generic Objects](https://homes.cs.washington.edu/~xkcd/pdfs/re3.pdf)
 
+<img src="/demo/sample_1.gif" height="300"/> <img src="/demo/sample_2.gif" height="300"/>
 
 Re3 is a real-time recurrent regression tracker. It offers accuracy and robustness similar to other state-of-the-art trackers while operating at 150 FPS. For more details, contact xkcd@cs.washington.edu. This repository implements the training and testing procedure from https://arxiv.org/pdf/1705.06368.pdf. A sample of the tracker can be found here: https://youtu.be/RByCiOLlxug.
 
 ## Recent Updates:
-I have changed the network design to be smaller than the one presented in the paper without loss in accuracy. If you want to use the smaller, faster network, you should do a git pull and download the new model linked to in the models section of the readme.
+* I have moved to Github to be consistent with [RAIVNLab](https://github.com/RAIVNLab).
+* I have released a slightly less-tested [PyTorch version](https://github.com/danielgordon10/re3-pytorch).
 
 ## Model:
 The new smaller pretrained weights model is available for download at http://bit.ly/2L5deYF. Please download it, unzip it, and place it in your logs directory. For more instructions see the First Time Setup section.
