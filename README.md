@@ -10,7 +10,7 @@ Re3 is a real-time recurrent regression tracker. It offers accuracy and robustne
 * I have released a slightly less-tested [PyTorch version](https://github.com/danielgordon10/re3-pytorch).
 
 ## Model:
-The new smaller pretrained weights model is available for download at http://bit.ly/2L5deYF. Please download it, unzip it, and place it in your logs directory. For more instructions see the First Time Setup section.
+The new smaller pretrained weights model is available for download at https://drive.google.com/file/d/1fyIBOSp4iGB6jpkRQri4oEdkKM-ws8PI/view?usp=drive_link. Please download it, unzip it, and place it in your logs directory. For more instructions see the First Time Setup section.
 If you would like to check the download, the md5 checksum is 10ec7fd551c30ea65a7deebe12bd532f.
 
 ## Requirements:
@@ -32,7 +32,7 @@ source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
-Then go to http://bit.ly/2L5deYF and download the file. Finally:
+Then go to https://drive.google.com/file/d/1fyIBOSp4iGB6jpkRQri4oEdkKM-ws8PI/view?usp=drive_link and download the file. Finally:
 ```bash
 mkdir logs
 mv /path/to/downloads/checkpoints.tar.gz logs
